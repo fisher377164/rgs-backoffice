@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  --sidebar-bg: #0b0f19;
+  --sidebar-foreground: #e5e7eb;
+  --background: #f6f6f9;
+  --foreground: #1f2937;
+  --card-bg: #ffffff;
+  --border: #e5e7eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sidebar-bg: #0b0f19;
+    --sidebar-foreground: #e5e7eb;
+    --background: #0b0f19;
+    --foreground: #f3f4f6;
+    --card-bg: #1f2937;
+    --border: #374151;
+  }
+}
+
+body {
+  @apply bg-[var(--background)] text-[var(--foreground)] font-sans;
+}
+
+/* Scrollbar styling for tabs overflow */
+.tab-scroll {
+  scrollbar-width: thin;
+}
