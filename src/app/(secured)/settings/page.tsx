@@ -1,12 +1,12 @@
 import PageHeader from '@/components/PageHeader';
 import { Card } from '@/components/Card';
 
-export default function JurisdictionsPage() {
+export default function SettingsPage() {
   return (
     <div className="space-y-6">
-      <PageHeader title="Jurisdictions" subtitle="Manage jurisdictions" />
+      <PageHeader title="Settings" />
       <Card>
-        <p>Jurisdictions content goes here.</p>
+        <p>Settings content goes here.</p>
       </Card>
     </div>
   );
