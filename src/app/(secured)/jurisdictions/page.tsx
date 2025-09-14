@@ -1,13 +1,5 @@
-import PageHeader from '@/components/PageHeader';
-import { Card } from '@/components/Card';
-
 export default function JurisdictionsPage() {
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Jurisdictions" subtitle="Manage jurisdictions" />
-      <Card>
-        <p>Jurisdictions content goes here.</p>
-      </Card>
-    </div>
-  );
+    return (
+        <div>Jurisdictions Page</div>
+    );
 }
