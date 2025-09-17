@@ -1,10 +1,72 @@
 "use client";
 
-import ConfigurableTable from "@/components/tables/ConfigurableTable";
-import { orderTableConfig, orders } from "@/data/dummyTableData";
+import { useCallback, useMemo } from "react";
 
-const OrdersTable = () => {
-  return <ConfigurableTable data={orders} config={orderTableConfig} />;
+import ConfigurableTable, { TableConfig } from "@/components/tables/ConfigurableTable";
+import type { Game } from "@/lib/games";
+
+interface OrdersTableProps {
+  data: Game[];
+}
+
+const OrdersTable = ({ data }: OrdersTableProps) => {
+  const handleEditGame = useCallback((game: Game) => {
+    console.log(`Edit game ${game.id}`);
+  }, []);
+
+  const handleRemoveGame = useCallback((game: Game) => {
+    console.log(`Remove game ${game.id}`);
+  }, []);
+
+  const tableConfig = useMemo<TableConfig<Game>>(
+    () => ({
+      name: "Games",
+      enablePagination: true,
+      enableSearch: true,
+      enableSorting: true,
+      defaultItemsPerPage: 10,
+      itemsPerPageOptions: [5, 10, 20],
+      getRowKey: (row) => row.id,
+      actions: {
+        align: "end",
+        edit: {
+          label: "Edit",
+          onClick: handleEditGame,
+        },
+        remove: {
+          label: "Remove",
+          onClick: handleRemoveGame,
+          buttonProps: {
+            className: "text-red-500",
+          },
+        },
+      },
+      fields: [
+        {
+          key: "id",
+          label: "ID",
+          dataKey: "id",
+          sortable: true,
+          searchAccessor: (row) => row.id,
+        },
+        {
+          key: "key",
+          label: "Key",
+          dataKey: "key",
+          sortable: true,
+        },
+        {
+          key: "name",
+          label: "Name",
+          dataKey: "name",
+          sortable: true,
+        },
+      ],
+    }),
+    [handleEditGame, handleRemoveGame]
+  );
+
+  return <ConfigurableTable data={data} config={tableConfig} />;
 };
 
 export default OrdersTable;
