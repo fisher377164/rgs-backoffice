@@ -2,8 +2,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { Metadata } from "next";
 import React from "react";
-import ConfigurableTable from "@/components/tables/ConfigurableTable";
-import { orderTableConfig, orders } from "@/data/dummyTableData";
+import OrdersTable from "@/components/tables/OrdersTable";
 
 export const metadata: Metadata = {
     title: "Next.js Basic Table | TailAdmin - Next.js Dashboard Template",
@@ -18,7 +17,7 @@ export default function BasicTables() {
             <PageBreadcrumb pageTitle="Basic Table"/>
             <div className="space-y-6">
                 <ComponentCard title="Basic Table 1">
-                    <ConfigurableTable data={orders} config={orderTableConfig} />
+                    <OrdersTable />
                 </ComponentCard>
             </div>
         </div>
