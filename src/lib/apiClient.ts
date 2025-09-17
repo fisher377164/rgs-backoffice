@@ -1,4 +1,15 @@
+import { showToast } from "@/lib/toastStore";
+
 const DEFAULT_API_BASE_URL = "http://builder-web.192.168.49.2.nip.io";
+
+const showErrorToast = (message: string) => {
+  showToast({
+    variant: "error",
+    title: "Request failed",
+    message,
+    hideButtonLabel: "Dismiss",
+  });
+};
 
 const ensureTrailingSlash = (value: string) => (value.endsWith("/") ? value : `${value}/`);
 const removeLeadingSlash = (value: string) => value.replace(/^\/+/, "");
@@ -98,7 +109,9 @@ export const fetchJson = async <TResponse>(
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unexpected error occurred";
-    throw new ApiError(0, `Request to ${url} failed: ${message}`);
+    const errorMessage = `Request to ${url} failed: ${message}`;
+    showErrorToast(errorMessage);
+    throw new ApiError(0, errorMessage);
   }
 
   if (!response.ok) {
@@ -106,6 +119,7 @@ export const fetchJson = async <TResponse>(
     const errorMessage =
       `Request to ${url} failed with status ${response.status}` +
       (details ? ` - ${details}` : "");
+    showErrorToast(errorMessage);
     throw new ApiError(response.status, errorMessage);
   }
 
@@ -117,10 +131,9 @@ export const fetchJson = async <TResponse>(
     return (await response.json()) as TResponse;
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    throw new ApiError(
-      response.status,
-      `Failed to parse JSON response from ${url}: ${reason}`
-    );
+    const errorMessage = `Failed to parse JSON response from ${url}: ${reason}`;
+    showErrorToast(errorMessage);
+    throw new ApiError(response.status, errorMessage);
   }
 };
 
