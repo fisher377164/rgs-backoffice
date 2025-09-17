@@ -35,7 +35,9 @@ export const subscribeToToasts = (listener: ToastListener) => {
 };
 
 export const getToastsSnapshot = () => [...toasts];
-export const getServerToastsSnapshot = (): ToastItem[] => [];
+
+const serverToastsSnapshot: ToastItem[] = [];
+export const getServerToastsSnapshot = (): ToastItem[] => serverToastsSnapshot;
 
 const shouldRenderToasts = () => typeof window !== "undefined";
 
