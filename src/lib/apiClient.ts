@@ -40,15 +40,72 @@ export class ApiError extends Error {
   }
 }
 
+const getErrorDetails = async (response: Response) => {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  try {
+    if (contentType.includes("application/json")) {
+      const payload = await response.json();
+
+      if (typeof payload === "string") {
+        return payload;
+      }
+
+      if (payload && typeof payload === "object") {
+        const message =
+          ("message" in payload && typeof payload.message === "string"
+            ? payload.message
+            : undefined) ??
+          ("error" in payload && typeof payload.error === "string"
+            ? payload.error
+            : undefined);
+
+        if (message) {
+          return message;
+        }
+
+        const entries = Object.entries(payload)
+          .map(([key, value]) => `${key}: ${String(value)}`)
+          .join(", ");
+
+        if (entries.length > 0) {
+          return entries;
+        }
+      }
+    } else {
+      const text = await response.text();
+      if (text) {
+        return text;
+      }
+    }
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return `Unable to parse error response: ${reason}`;
+  }
+
+  return undefined;
+};
+
 export const fetchJson = async <TResponse>(
   endpoint: string,
   init?: RequestInit
 ): Promise<TResponse> => {
   const url = buildRequestUrl(endpoint);
-  const response = await fetch(url, init);
+
+  let response: Response;
+  try {
+    response = await fetch(url, init);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unexpected error occurred";
+    throw new ApiError(0, `Request to ${url} failed: ${message}`);
+  }
 
   if (!response.ok) {
-    const errorMessage = `Request to ${url} failed with status ${response.status}`;
+    const details = await getErrorDetails(response);
+    const errorMessage =
+      `Request to ${url} failed with status ${response.status}` +
+      (details ? ` - ${details}` : "");
     throw new ApiError(response.status, errorMessage);
   }
 
@@ -56,7 +113,15 @@ export const fetchJson = async <TResponse>(
     return undefined as TResponse;
   }
 
-  return (await response.json()) as TResponse;
+  try {
+    return (await response.json()) as TResponse;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new ApiError(
+      response.status,
+      `Failed to parse JSON response from ${url}: ${reason}`
+    );
+  }
 };
 
 export default fetchJson;
