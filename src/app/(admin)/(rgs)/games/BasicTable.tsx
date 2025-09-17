@@ -12,6 +12,7 @@ import {
 import Badge from "@/components/ui/badge/Badge";
 import Image from "next/image";
 import Pagination from "@/components/tables/Pagination";
+import Button from "@/components/ui/button/Button";
 
 type SortDirection = "asc" | "desc";
 
@@ -37,8 +38,28 @@ interface TableField<T> {
   render?: (row: T) => React.ReactNode;
 }
 
+interface TableActionButtonProps {
+  variant?: "primary" | "outline";
+  className?: string;
+}
+
+interface TableAction<T> {
+  label?: string;
+  onClick?: (row: T) => void;
+  buttonProps?: TableActionButtonProps;
+}
+
+interface TableActions<T> {
+  label?: string;
+  align?: "start" | "center" | "end";
+  headerClassName?: string;
+  cellClassName?: string;
+  edit?: TableAction<T>;
+  remove?: TableAction<T>;
+}
+
 interface TableConfig<T> {
-  name: string;
+  name?: string;
   fields: TableField<T>[];
   enableSorting?: boolean;
   enableSearch?: boolean;
@@ -46,9 +67,10 @@ interface TableConfig<T> {
   itemsPerPageOptions?: number[];
   defaultItemsPerPage?: number;
   getRowKey?: (row: T, index: number) => string | number;
+  actions?: TableActions<T>;
 }
 
-interface ConfigurableTableProps<T extends Record<string, unknown>> {
+interface ConfigurableTableProps<T extends object> {
   data: T[];
   config: TableConfig<T>;
 }
@@ -77,7 +99,7 @@ const normalizeValue = (value: unknown): string | number => {
   return String(value);
 };
 
-const ConfigurableTable = <T extends Record<string, unknown>>({
+const ConfigurableTable = <T extends object>({
   data,
   config,
 }: ConfigurableTableProps<T>) => {
@@ -95,8 +117,10 @@ const ConfigurableTable = <T extends Record<string, unknown>>({
     : data.length || pageSizeOptions[0];
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortState, setSortState] = useState<{
+    field: string | null;
+    direction: SortDirection;
+  }>({ field: null, direction: "asc" });
   const [itemsPerPage, setItemsPerPage] = useState<number>(initialItemsPerPage);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -111,31 +135,33 @@ const ConfigurableTable = <T extends Record<string, unknown>>({
     }
   }, [enablePagination, searchTerm]);
 
-  const resolveFieldValue = useCallback(
-    (row: T, field: TableField<T>) => {
-      if (field.dataKey !== undefined) {
-        return row[field.dataKey];
-      }
+  const resolveFieldValue = useCallback((row: T, field: TableField<T>) => {
+    if (field.dataKey !== undefined) {
+      const key = field.dataKey;
+      return (row as Record<keyof T, unknown>)[key];
+    }
 
-      return (row as Record<string, unknown>)[field.key];
-    },
-    []
-  );
+    return (row as Record<string, unknown>)[field.key];
+  }, []);
 
   const handleSort = useCallback(
     (field: TableField<T>) => {
-      if (!enableSorting || !field.sortable) {
+      if (!enableSorting || field.sortable === false) {
         return;
       }
 
-      setSortField((previousField) => {
-        if (previousField === field.key) {
-          setSortDirection((direction) => (direction === "asc" ? "desc" : "asc"));
-          return previousField;
+      setSortState((previousState) => {
+        if (previousState.field === field.key) {
+          return {
+            field: field.key,
+            direction: previousState.direction === "asc" ? "desc" : "asc",
+          };
         }
 
-        setSortDirection("asc");
-        return field.key;
+        return {
+          field: field.key,
+          direction: "asc",
+        };
       });
     },
     [enableSorting]
@@ -177,11 +203,11 @@ const ConfigurableTable = <T extends Record<string, unknown>>({
   }, [config.fields, data, enableSearch, resolveFieldValue, searchTerm]);
 
   const sortedData = useMemo(() => {
-    if (!enableSorting || !sortField) {
+    if (!enableSorting || !sortState.field) {
       return filteredData;
     }
 
-    const field = config.fields.find((item) => item.key === sortField);
+    const field = config.fields.find((item) => item.key === sortState.field);
     if (!field) {
       return filteredData;
     }
@@ -202,16 +228,16 @@ const ConfigurableTable = <T extends Record<string, unknown>>({
       const normalizedB = normalizeValue(bValue);
 
       if (normalizedA < normalizedB) {
-        return sortDirection === "asc" ? -1 : 1;
+        return sortState.direction === "asc" ? -1 : 1;
       }
 
       if (normalizedA > normalizedB) {
-        return sortDirection === "asc" ? 1 : -1;
+        return sortState.direction === "asc" ? 1 : -1;
       }
 
       return 0;
     });
-  }, [config.fields, enableSorting, filteredData, resolveFieldValue, sortDirection, sortField]);
+  }, [config.fields, enableSorting, filteredData, resolveFieldValue, sortState.direction, sortState.field]);
 
   const totalItems = sortedData.length;
   const totalPages = enablePagination
@@ -255,13 +281,24 @@ const ConfigurableTable = <T extends Record<string, unknown>>({
     ? Math.min(currentPage * itemsPerPage, totalItems)
     : totalItems;
 
+  const actionsConfig = config.actions;
+  const hasActions = Boolean(actionsConfig && (actionsConfig.edit || actionsConfig.remove));
+  const actionsAlignment =
+    actionsConfig?.align === "start"
+      ? "text-start"
+      : actionsConfig?.align === "center"
+      ? "text-center"
+      : "text-end";
+
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-4 dark:border-white/[0.05]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            {config.name}
-          </h3>
+          {config.name && (
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+              {config.name}
+            </h3>
+          )}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             {enableSearch && (
               <div className="relative">
@@ -322,28 +359,45 @@ const ConfigurableTable = <T extends Record<string, unknown>>({
                       ? "text-right"
                       : "text-start";
 
-                  const isSortedColumn = sortField === field.key;
+                  const isSortedColumn = sortState.field === field.key;
 
                   return (
                     <TableCell
                       key={field.key}
                       isHeader
-                      onClick={() => handleSort(field)}
+                      onClick={
+                        enableSorting && field.sortable !== false
+                          ? () => handleSort(field)
+                          : undefined
+                      }
                       className={`select-none px-4 py-3 font-medium text-theme-xs text-gray-500 transition-colors duration-150 dark:text-gray-400 ${alignmentClass} ${
-                        enableSorting && field.sortable ? "cursor-pointer hover:text-gray-700 dark:hover:text-white/80" : ""
+                        enableSorting && field.sortable !== false
+                          ? "cursor-pointer hover:text-gray-700 dark:hover:text-white/80"
+                          : ""
                       } ${field.headerClassName ?? ""}`}
                     >
                       <span className="inline-flex items-center gap-1">
                         {field.label}
-                        {enableSorting && field.sortable && (
+                        {enableSorting && field.sortable !== false && (
                           <span className="text-xs text-gray-400 dark:text-gray-500">
-                            {isSortedColumn ? (sortDirection === "asc" ? "▲" : "▼") : "↕"}
+                            {isSortedColumn ? (sortState.direction === "asc" ? "▲" : "▼") : "↕"}
                           </span>
                         )}
                       </span>
                     </TableCell>
                   );
                 })}
+                {hasActions && (
+                  <TableCell
+                    key="actions"
+                    isHeader
+                    className={`px-4 py-3 font-medium text-theme-xs text-gray-500 ${actionsAlignment} ${
+                      actionsConfig?.headerClassName ?? ""
+                    }`}
+                  >
+                    {actionsConfig?.label ?? "Actions"}
+                  </TableCell>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
@@ -377,13 +431,53 @@ const ConfigurableTable = <T extends Record<string, unknown>>({
                       </TableCell>
                     );
                   })}
+                  {hasActions && (
+                    <TableCell
+                      className={`px-4 py-3 text-theme-sm text-gray-500 dark:text-gray-400 ${actionsAlignment} ${
+                        actionsConfig?.cellClassName ?? ""
+                      }`}
+                    >
+                      <div
+                        className={`flex gap-2 ${
+                          actionsConfig?.align === "center"
+                            ? "justify-center"
+                            : actionsConfig?.align === "start"
+                            ? "justify-start"
+                            : "justify-end"
+                        }`}
+                      >
+                        {actionsConfig?.edit && (
+                          <Button
+                            size="sm"
+                            variant={actionsConfig.edit.buttonProps?.variant ?? "outline"}
+                            className={actionsConfig.edit.buttonProps?.className}
+                            onClick={() => actionsConfig.edit?.onClick?.(row)}
+                          >
+                            {actionsConfig.edit.label ?? "Edit"}
+                          </Button>
+                        )}
+                        {actionsConfig?.remove && (
+                          <Button
+                            size="sm"
+                            variant={actionsConfig.remove.buttonProps?.variant ?? "outline"}
+                            className={
+                              actionsConfig.remove.buttonProps?.className ?? "text-red-500"
+                            }
+                            onClick={() => actionsConfig.remove?.onClick?.(row)}
+                          >
+                            {actionsConfig.remove.label ?? "Remove"}
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {paginatedData.length === 0 && (
                 <TableRow>
                   <TableCell
                     className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
-                    colSpan={config.fields.length}
+                    colSpan={config.fields.length + (hasActions ? 1 : 0)}
                   >
                     No records found.
                   </TableCell>
@@ -565,6 +659,14 @@ const statusColorMap: Record<Order["status"], "success" | "warning" | "error"> =
   Cancel: "error",
 };
 
+const handleEditOrder = (order: Order) => {
+  console.log(`Edit order ${order.id}`);
+};
+
+const handleRemoveOrder = (order: Order) => {
+  console.log(`Remove order ${order.id}`);
+};
+
 const orderTableConfig: TableConfig<Order> = {
   name: "Games",
   enablePagination: true,
@@ -573,6 +675,15 @@ const orderTableConfig: TableConfig<Order> = {
   defaultItemsPerPage: 5,
   itemsPerPageOptions: [5, 10, 20],
   getRowKey: (row) => row.id,
+  actions: {
+    align: "end",
+    edit: {
+      onClick: handleEditOrder,
+    },
+    remove: {
+      onClick: handleRemoveOrder,
+    },
+  },
   fields: [
     {
       key: "user",
