@@ -48,7 +48,7 @@ interface TableConfig<T> {
   getRowKey?: (row: T, index: number) => string | number;
 }
 
-interface ConfigurableTableProps<T> {
+interface ConfigurableTableProps<T extends Record<string, unknown>> {
   data: T[];
   config: TableConfig<T>;
 }
