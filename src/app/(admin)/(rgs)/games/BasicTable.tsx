@@ -299,7 +299,7 @@ const ConfigurableTable = <T extends Record<string, unknown>>({
                   className="h-10 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-white/[0.05] dark:bg-transparent dark:text-white/80"
                 >
                   {pageSizeOptions.map((option) => (
-                    <option key={option} value={option}>
+                    <option key={option} value={option} className="text-gray-500 dark:bg-gray-900 dark:text-gray-400">
                       {option}
                     </option>
                   ))}
