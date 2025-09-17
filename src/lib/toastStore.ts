@@ -34,7 +34,7 @@ export const subscribeToToasts = (listener: ToastListener) => {
   };
 };
 
-export const getToastsSnapshot = () => [...toasts];
+export const getToastsSnapshot = () => toasts;
 
 const serverToastsSnapshot: ToastItem[] = [];
 export const getServerToastsSnapshot = (): ToastItem[] => serverToastsSnapshot;
