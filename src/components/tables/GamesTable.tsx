@@ -27,6 +27,21 @@ const GamesTable = ({ data }: GamesTableProps) => {
       defaultItemsPerPage: 10,
       itemsPerPageOptions: [5, 10, 20],
       getRowKey: (row) => row.id,
+      expandable: {
+        toggleColumn: {
+          width: "3rem",
+        },
+        renderContent: (row) => (
+          <div className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
+            <p>
+              <span className="font-medium text-gray-700 dark:text-gray-200">Game Key:</span> {row.gameKey}
+            </p>
+            <p>
+              <span className="font-medium text-gray-700 dark:text-gray-200">Studio ID:</span> {row.studioId ?? "N/A"}
+            </p>
+          </div>
+        ),
+      },
       actions: {
         align: "end",
         edit: {
