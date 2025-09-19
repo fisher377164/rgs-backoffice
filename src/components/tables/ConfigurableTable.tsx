@@ -55,6 +55,17 @@ export interface TableActions<T> {
   remove?: TableAction<T>;
 }
 
+export interface TableExpandableToggleColumnConfig {
+  width?: string | number;
+  headerClassName?: string;
+  cellClassName?: string;
+}
+
+export interface TableExpandableConfig<T> {
+  renderContent: (row: T) => React.ReactNode;
+  toggleColumn?: TableExpandableToggleColumnConfig;
+}
+
 export interface TableConfig<T> {
   name?: string;
   fields: TableField<T>[];
@@ -65,6 +76,7 @@ export interface TableConfig<T> {
   defaultItemsPerPage?: number;
   getRowKey?: (row: T, index: number) => string | number;
   actions?: TableActions<T>;
+  expandable?: TableExpandableConfig<T>;
 }
 
 interface ConfigurableTableProps<T extends object> {
@@ -120,6 +132,21 @@ const ConfigurableTable = <T extends object>({
   }>({ field: null, direction: "asc" });
   const [itemsPerPage, setItemsPerPage] = useState<number>(initialItemsPerPage);
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
+    () => new Set()
+  );
+
+  const toggleRowExpansion = useCallback((rowKey: string | number) => {
+    setExpandedRows((previousSet) => {
+      const nextSet = new Set(previousSet);
+      if (nextSet.has(rowKey)) {
+        nextSet.delete(rowKey);
+      } else {
+        nextSet.add(rowKey);
+      }
+      return nextSet;
+    });
+  }, []);
 
   useEffect(() => {
     setItemsPerPage(initialItemsPerPage);
@@ -256,6 +283,18 @@ const ConfigurableTable = <T extends object>({
     return sortedData.slice(startIndex, startIndex + itemsPerPage);
   }, [currentPage, enablePagination, itemsPerPage, sortedData]);
 
+  const rowKeyGetter = config.getRowKey;
+  const computeRowKey = useCallback(
+    (row: T, index: number) => {
+      const key = rowKeyGetter?.(row, index);
+      if (key === undefined || key === null) {
+        return index;
+      }
+      return key;
+    },
+    [rowKeyGetter]
+  );
+
   const handleItemsPerPageChange = useCallback((value: number) => {
     setItemsPerPage(value);
     setCurrentPage(1);
@@ -286,6 +325,10 @@ const ConfigurableTable = <T extends object>({
       : actionsConfig?.align === "center"
       ? "text-center"
       : "text-end";
+
+  const totalColumns =
+    config.fields.length + (hasActions ? 1 : 0) + (config.expandable ? 1 : 0);
+  const baseRowIndex = enablePagination ? (currentPage - 1) * itemsPerPage : 0;
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -348,6 +391,21 @@ const ConfigurableTable = <T extends object>({
           <Table>
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
+                {config.expandable && (
+                  <TableCell
+                    isHeader
+                    className={`px-4 py-3 text-center text-theme-xs text-gray-500 dark:text-gray-400 ${
+                      config.expandable.toggleColumn?.headerClassName ?? ""
+                    }`}
+                    style={
+                      config.expandable.toggleColumn?.width
+                        ? { width: config.expandable.toggleColumn.width }
+                        : undefined
+                    }
+                  >
+                    <span className="sr-only">Toggle row details</span>
+                  </TableCell>
+                )}
                 {config.fields.map((field) => {
                   const alignmentClass =
                     field.align === "center"
@@ -398,83 +456,117 @@ const ConfigurableTable = <T extends object>({
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {paginatedData.map((row, rowIndex) => (
-                <TableRow
-                  key={
-                    config.getRowKey
-                      ? config.getRowKey(row, (currentPage - 1) * itemsPerPage + rowIndex)
-                      : `${(currentPage - 1) * itemsPerPage + rowIndex}`
-                  }
-                >
-                  {config.fields.map((field) => {
-                    const alignmentClass =
-                      field.align === "center"
-                        ? "text-center"
-                        : field.align === "end"
-                        ? "text-right"
-                        : "text-start";
+              {paginatedData.map((row, rowIndex) => {
+                const absoluteIndex = baseRowIndex + rowIndex;
+                const rowKey = computeRowKey(row, absoluteIndex);
+                const isExpanded = expandedRows.has(rowKey);
 
-                    return (
-                      <TableCell
-                        key={field.key}
-                        className={`px-4 py-3 text-theme-sm text-gray-500 dark:text-gray-400 ${alignmentClass} ${field.cellClassName ?? ""}`}
-                      >
-                        {field.render
-                          ? field.render(row)
-                          : (() => {
-                              const value = resolveFieldValue(row, field);
-                              return value !== null && value !== undefined ? String(value) : "";
-                            })()}
-                      </TableCell>
-                    );
-                  })}
-                  {hasActions && (
-                    <TableCell
-                      className={`px-4 py-3 text-theme-sm text-gray-500 dark:text-gray-400 ${actionsAlignment} ${
-                        actionsConfig?.cellClassName ?? ""
-                      }`}
-                    >
-                      <div
-                        className={`flex gap-2 ${
-                          actionsConfig?.align === "center"
-                            ? "justify-center"
-                            : actionsConfig?.align === "start"
-                            ? "justify-start"
-                            : "justify-end"
-                        }`}
-                      >
-                        {actionsConfig?.edit && (
-                          <Button
-                            size="sm"
-                            variant={actionsConfig.edit.buttonProps?.variant ?? "outline"}
-                            className={actionsConfig.edit.buttonProps?.className}
-                            onClick={() => actionsConfig.edit?.onClick?.(row)}
+                return (
+                  <React.Fragment key={String(rowKey)}>
+                    <TableRow>
+                      {config.expandable && (
+                        <TableCell
+                          className={`px-4 py-3 text-center ${
+                            config.expandable.toggleColumn?.cellClassName ?? ""
+                          }`}
+                          style={
+                            config.expandable.toggleColumn?.width
+                              ? { width: config.expandable.toggleColumn.width }
+                              : undefined
+                          }
+                        >
+                          <button
+                            type="button"
+                            onClick={() => toggleRowExpansion(rowKey)}
+                            aria-label={isExpanded ? "Collapse row" : "Expand row"}
+                            aria-expanded={isExpanded}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-gray-200 text-sm font-medium text-gray-500 transition-colors hover:border-brand-300 hover:text-brand-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:text-gray-400 dark:hover:text-white"
                           >
-                            {actionsConfig.edit.label ?? "Edit"}
-                          </Button>
-                        )}
-                        {actionsConfig?.remove && (
-                          <Button
-                            size="sm"
-                            variant={actionsConfig.remove.buttonProps?.variant ?? "outline"}
-                            className={
-                              actionsConfig.remove.buttonProps?.className ?? "text-red-500"
-                            }
-                            onClick={() => actionsConfig.remove?.onClick?.(row)}
+                            {isExpanded ? "−" : "+"}
+                          </button>
+                        </TableCell>
+                      )}
+                      {config.fields.map((field) => {
+                        const alignmentClass =
+                          field.align === "center"
+                            ? "text-center"
+                            : field.align === "end"
+                            ? "text-right"
+                            : "text-start";
+
+                        return (
+                          <TableCell
+                            key={field.key}
+                            className={`px-4 py-3 text-theme-sm text-gray-500 dark:text-gray-400 ${alignmentClass} ${field.cellClassName ?? ""}`}
                           >
-                            {actionsConfig.remove.label ?? "Remove"}
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
+                            {field.render
+                              ? field.render(row)
+                              : (() => {
+                                  const value = resolveFieldValue(row, field);
+                                  return value !== null && value !== undefined ? String(value) : "";
+                                })()}
+                          </TableCell>
+                        );
+                      })}
+                      {hasActions && (
+                        <TableCell
+                          className={`px-4 py-3 text-theme-sm text-gray-500 dark:text-gray-400 ${actionsAlignment} ${
+                            actionsConfig?.cellClassName ?? ""
+                          }`}
+                        >
+                          <div
+                            className={`flex gap-2 ${
+                              actionsConfig?.align === "center"
+                                ? "justify-center"
+                                : actionsConfig?.align === "start"
+                                ? "justify-start"
+                                : "justify-end"
+                            }`}
+                          >
+                            {actionsConfig?.edit && (
+                              <Button
+                                size="sm"
+                                variant={actionsConfig.edit.buttonProps?.variant ?? "outline"}
+                                className={actionsConfig.edit.buttonProps?.className}
+                                onClick={() => actionsConfig.edit?.onClick?.(row)}
+                              >
+                                {actionsConfig.edit.label ?? "Edit"}
+                              </Button>
+                            )}
+                            {actionsConfig?.remove && (
+                              <Button
+                                size="sm"
+                                variant={actionsConfig.remove.buttonProps?.variant ?? "outline"}
+                                className={
+                                  actionsConfig.remove.buttonProps?.className ?? "text-red-500"
+                                }
+                                onClick={() => actionsConfig.remove?.onClick?.(row)}
+                              >
+                                {actionsConfig.remove.label ?? "Remove"}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                    {config.expandable && isExpanded && (
+                      <TableRow className="bg-gray-50/80 dark:bg-white/[0.02]">
+                        <TableCell
+                          colSpan={totalColumns}
+                          className="px-6 py-4 text-theme-sm text-gray-600 dark:text-gray-300"
+                        >
+                          {config.expandable.renderContent(row)}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                );
+              })}
               {paginatedData.length === 0 && (
                 <TableRow>
                   <TableCell
                     className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
-                    colSpan={config.fields.length + (hasActions ? 1 : 0)}
+                    colSpan={totalColumns}
                   >
                     No records found.
                   </TableCell>
