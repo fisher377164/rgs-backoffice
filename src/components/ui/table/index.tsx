@@ -31,6 +31,7 @@ interface TableCellProps {
   className?: string; // Optional className for styling
   colSpan?: number; // Optional colspan support for table cells
   onClick?: React.MouseEventHandler<HTMLTableCellElement>; // Optional click handler
+  style?: React.CSSProperties; // Optional inline styles for table cells
 }
 
 // Table Component
@@ -60,17 +61,28 @@ const TableCell: React.FC<TableCellProps> = ({
   className,
   colSpan,
   onClick,
+  style,
 }) => {
   if (isHeader) {
     return (
-      <th className={` ${className}`} colSpan={colSpan} onClick={onClick}>
+      <th
+        className={` ${className}`}
+        colSpan={colSpan}
+        onClick={onClick}
+        style={style}
+      >
         {children}
       </th>
     );
   }
 
   return (
-    <td className={` ${className}`} colSpan={colSpan} onClick={onClick}>
+    <td
+      className={` ${className}`}
+      colSpan={colSpan}
+      onClick={onClick}
+      style={style}
+    >
       {children}
     </td>
   );
