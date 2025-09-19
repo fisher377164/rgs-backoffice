@@ -1,18 +1,5 @@
-import { fetchJson } from "@/lib/apiClient";
-
-export interface Game {
-    id: number;
-    gameKey: string;
-    name: string;
-    studioId?: number;
-}
-
-type GamesApiResponse = {
-    totalElements: number,
-    page: number,
-    size: number
-    content?: Game[];
-};
+import { fetchData } from "@/lib/apiClient";
+import { Game, GamesApiResponse } from "@/lib/games/gameType";
 
 const normalizeGamesResponse = (response: GamesApiResponse): Game[] => {
      if (response.content) {
@@ -28,7 +15,7 @@ const normalizeGamesResponse = (response: GamesApiResponse): Game[] => {
 };
 
 export const fetchGames = async (): Promise<Game[]> => {
-    const response = await fetchJson<GamesApiResponse>("/v1/games", {cache: "no-store"});
+    const response = await fetchData<GamesApiResponse>("/v1/games", {cache: "no-store"});
     return normalizeGamesResponse(response);
 };
 

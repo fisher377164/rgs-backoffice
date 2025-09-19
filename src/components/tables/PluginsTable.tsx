@@ -3,24 +3,24 @@
 import { useCallback, useMemo } from "react";
 
 import ConfigurableTable, { TableConfig } from "@/components/tables/ConfigurableTable";
-import { Game } from "@/lib/games/gameType";
+import { Plugin } from "@/lib/plugins/pluginType";
 
-interface GamesTableProps {
-  data: Game[];
+interface PluginsTableProps {
+  data: Plugin[];
 }
 
-const GamesTable = ({ data }: GamesTableProps) => {
-  const handleEditGame = useCallback((game: Game) => {
-    console.log(`Edit game ${game.id}`);
+const PluginsTable = ({ data }: PluginsTableProps) => {
+  const handleEditPlugin = useCallback((plugin: Plugin) => {
+    console.log(`Edit plugin ${plugin.id}`);
   }, []);
 
-  const handleRemoveGame = useCallback((game: Game) => {
-    console.log(`Remove game ${game.id}`);
+  const handleRemovePlugin = useCallback((plugin: Plugin) => {
+    console.log(`Remove plugin ${plugin.id}`);
   }, []);
 
-  const tableConfig = useMemo<TableConfig<Game>>(
+  const tableConfig = useMemo<TableConfig<Plugin>>(
     () => ({
-      name: "Games",
+      name: "Plugins",
       enablePagination: true,
       enableSearch: true,
       enableSorting: true,
@@ -31,11 +31,11 @@ const GamesTable = ({ data }: GamesTableProps) => {
         align: "end",
         edit: {
           label: "Edit",
-          onClick: handleEditGame,
+          onClick: handleEditPlugin,
         },
         remove: {
           label: "Remove",
-          onClick: handleRemoveGame,
+          onClick: handleRemovePlugin,
           buttonProps: {
             className: "text-red-500",
           },
@@ -52,7 +52,7 @@ const GamesTable = ({ data }: GamesTableProps) => {
         {
           key: "key",
           label: "Key",
-          dataKey: "gameKey",
+          dataKey: "pluginKey",
           sortable: true,
         },
         {
@@ -63,10 +63,10 @@ const GamesTable = ({ data }: GamesTableProps) => {
         },
       ],
     }),
-    [handleEditGame, handleRemoveGame]
+    [handleEditPlugin, handleRemovePlugin]
   );
 
   return <ConfigurableTable data={data} config={tableConfig} />;
 };
 
-export default GamesTable;
+export default PluginsTable;

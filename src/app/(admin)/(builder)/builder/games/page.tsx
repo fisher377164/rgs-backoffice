@@ -2,10 +2,10 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { Metadata } from "next";
 import ComponentCard from "@/components/common/ComponentCard";
 import GamesTable from "@/components/tables/GamesTable";
-import { fetchGames } from "@/lib/games";
+import { fetchGames } from "@/lib/games/fetchGames";
 
 export const metadata: Metadata = {
-    title: "FiG | All Games",
+    title: "FiG | All Builded Games",
     description: "All Games page",
 };
 

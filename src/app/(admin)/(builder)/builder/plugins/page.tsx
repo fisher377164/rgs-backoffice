@@ -1,24 +1,24 @@
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { Metadata } from "next";
 import ComponentCard from "@/components/common/ComponentCard";
-import GamesTable from "@/components/tables/GamesTable";
-import { fetchGames } from "@/lib/games";
+import PluginsTable from "@/components/tables/PluginsTable";
+import fetchPlugins from "@/lib/plugins/fetchPlugins";
 
 export const metadata: Metadata = {
     title: "FiG | All plugins",
     description: "All PlugIns page",
 };
 
-export default async function GamesPage() {
+export default async function PluginsPage() {
     // TODO: FIX IT
-    const games = await fetchGames();
+    const games = await fetchPlugins();
 
     return (
         <div>
             <PageBreadcrumb pageTitle="All plugins" />
             <div className="space-y-6">
-                <ComponentCard title="plugins">
-                    <GamesTable data={games} />
+                <ComponentCard title="Plugins">
+                    <PluginsTable data={games} />
                 </ComponentCard>
             </div>
         </div>

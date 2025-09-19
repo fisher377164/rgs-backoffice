@@ -2,6 +2,7 @@ import { showToast } from "@/lib/toastStore";
 
 const DEFAULT_API_BASE_URL = "http://builder-web.192.168.49.2.nip.io";
 
+// TODO: fix it ->
 const showErrorToast = (message: string) => {
   showToast({
     variant: "error",
@@ -97,7 +98,7 @@ const getErrorDetails = async (response: Response) => {
   return undefined;
 };
 
-export const fetchJson = async <TResponse>(
+export const fetchData = async <TResponse>(
   endpoint: string,
   init?: RequestInit
 ): Promise<TResponse> => {
@@ -137,4 +138,4 @@ export const fetchJson = async <TResponse>(
   }
 };
 
-export default fetchJson;
+export default fetchData;
