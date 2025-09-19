@@ -3,8 +3,8 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";
 
 export const metadata: Metadata = {
-    title: "FiG | New plugin",
-    description: "New Plugin page",
+    title: "FiG | Builder | New game",
+    description: "Build new game",
 };
 
 export default async function NewPluginPage() {
@@ -12,15 +12,15 @@ export default async function NewPluginPage() {
     return (
         <div>
             <PageBreadcrumb
-                pageTitle="New plugin"
+                pageTitle="New game"
                 breadcrumbs={[
                     { label: "Builder" },
-                    { label: "Plugins", href: "/builder/plugins" },
-                    { label: "New plugin" },
+                    { label: "All Builded Games", href: "/builder/games" },
+                    { label: "New game" },
                 ]}
             />
             <div className="space-y-6">
-                <ComponentCard title="Plugins">
+                <ComponentCard title="New game">
                     <div>Content</div>
                 </ComponentCard>
             </div>

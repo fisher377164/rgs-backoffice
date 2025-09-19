@@ -11,14 +11,14 @@ export const metadata: Metadata = {
 };
 
 export default async function PluginsPage() {
-    const games = await fetchPlugins();
+    const plugins = await fetchPlugins();
 
     return (
         <div>
             <PageBreadcrumb
-                pageTitle="All plugins"
+                pageTitle="Plugins"
                 breadcrumbs={[
-                    { label: "Builder", href: "/builder" },
+                    { label: "Builder" },
                     { label: "Plugins" },
                 ]}
             />
@@ -34,7 +34,7 @@ export default async function PluginsPage() {
                         </Link>
                     }
                 >
-                    <PluginsTable data={games} />
+                    <PluginsTable data={plugins} />
                 </ComponentCard>
             </div>
         </div>
