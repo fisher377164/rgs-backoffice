@@ -5,18 +5,19 @@ import GamesTable from "@/components/tables/GamesTable";
 import { fetchGames } from "@/lib/games";
 
 export const metadata: Metadata = {
-    title: "FiG | All Games",
-    description: "All Games page",
+    title: "FiG | All plugins",
+    description: "All PlugIns page",
 };
 
 export default async function GamesPage() {
+    // TODO: FIX IT
     const games = await fetchGames();
 
     return (
         <div>
-            <PageBreadcrumb pageTitle="All Games" />
+            <PageBreadcrumb pageTitle="All plugins" />
             <div className="space-y-6">
-                <ComponentCard title="Games">
+                <ComponentCard title="plugins">
                     <GamesTable data={games} />
                 </ComponentCard>
             </div>

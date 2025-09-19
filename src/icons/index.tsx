@@ -52,6 +52,7 @@ import ChatIcon from "./chat.svg";
 import MoreDotIcon from "./more-dot.svg";
 import BellIcon from "./bell.svg";
 import SlotGames from "./slot-games.svg";
+import SlotBuilder from "./slot-builder.svg";
 
 export {
     DownloadIcon,
@@ -108,4 +109,5 @@ export {
     ChevronUpIcon,
     ChatIcon,
     SlotGames,
+    SlotBuilder,
 };

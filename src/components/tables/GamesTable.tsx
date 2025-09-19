@@ -5,11 +5,11 @@ import { useCallback, useMemo } from "react";
 import ConfigurableTable, { TableConfig } from "@/components/tables/ConfigurableTable";
 import type { Game } from "@/lib/games";
 
-interface OrdersTableProps {
+interface GamesTableProps {
   data: Game[];
 }
 
-const OrdersTable = ({ data }: OrdersTableProps) => {
+const GamesTable = ({ data }: GamesTableProps) => {
   const handleEditGame = useCallback((game: Game) => {
     console.log(`Edit game ${game.id}`);
   }, []);
@@ -52,7 +52,7 @@ const OrdersTable = ({ data }: OrdersTableProps) => {
         {
           key: "key",
           label: "Key",
-          dataKey: "key",
+          dataKey: "gameKey",
           sortable: true,
         },
         {
@@ -69,4 +69,4 @@ const OrdersTable = ({ data }: OrdersTableProps) => {
   return <ConfigurableTable data={data} config={tableConfig} />;
 };
 
-export default OrdersTable;
+export default GamesTable;

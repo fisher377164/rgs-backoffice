@@ -14,7 +14,7 @@ export default async function GamesPage() {
 
     return (
         <div>
-            <PageBreadcrumb pageTitle="All Games" />
+            <PageBreadcrumb pageTitle="All Builded Games" />
             <div className="space-y-6">
                 <ComponentCard title="Games">
                     <GamesTable data={games} />

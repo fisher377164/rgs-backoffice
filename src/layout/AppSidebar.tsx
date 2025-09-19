@@ -13,7 +13,9 @@ import {
     ListIcon,
     PageIcon,
     PieChartIcon,
-    PlugInIcon, SlotGames,
+    PlugInIcon,
+    SlotBuilder,
+    SlotGames,
     TableIcon,
     UserCircleIcon,
 } from "../icons/index";
@@ -28,6 +30,7 @@ type NavItem = {
 
 enum MenuType {
     RGS,
+    BUILDER,
     MAIN,
     OTHERS,
 }
@@ -40,36 +43,47 @@ const rgsNavItems: NavItem[] = [
     },
 ];
 
+const slotBuilderNavItems: NavItem[] = [
+    {
+        icon: <SlotBuilder />,
+        name: "Builder",
+        subItems: [
+            {name: "Games", path: "/builder/games", new: true},
+            {name: "Plugins", path: "/builder/plugins", new: true},
+        ],
+    },
+];
+
 const navItems: NavItem[] = [
     {
-        icon: <GridIcon/>,
+        icon: <GridIcon />,
         name: "DEMO Dashboard",
         subItems: [{name: "Ecommerce", path: "/", pro: false}],
     },
     {
-        icon: <CalenderIcon/>,
+        icon: <CalenderIcon />,
         name: "DEMO Calendar",
         path: "/calendar",
     },
     {
-        icon: <UserCircleIcon/>,
+        icon: <UserCircleIcon />,
         name: "DEMO User Profile",
         path: "/profile",
     },
 
     {
         name: "DEMO Forms",
-        icon: <ListIcon/>,
+        icon: <ListIcon />,
         subItems: [{name: "Form Elements", path: "/form-elements", pro: false}],
     },
     {
         name: "DEMO Tables",
-        icon: <TableIcon/>,
+        icon: <TableIcon />,
         subItems: [{name: "Basic Tables", path: "/basic-tables", pro: false}],
     },
     {
         name: "DEMO Pages",
-        icon: <PageIcon/>,
+        icon: <PageIcon />,
         subItems: [
             {name: "Blank Page", path: "/blank", pro: false},
             {name: "404 Error", path: "/error-404", pro: false},
@@ -79,7 +93,7 @@ const navItems: NavItem[] = [
 
 const othersItems: NavItem[] = [
     {
-        icon: <PieChartIcon/>,
+        icon: <PieChartIcon />,
         name: "DEMO Charts",
         subItems: [
             {name: "Line Chart", path: "/line-chart", pro: false},
@@ -87,7 +101,7 @@ const othersItems: NavItem[] = [
         ],
     },
     {
-        icon: <BoxCubeIcon/>,
+        icon: <BoxCubeIcon />,
         name: "DEMO UI Elements",
         subItems: [
             {name: "Alerts", path: "/alerts", pro: false},
@@ -99,7 +113,7 @@ const othersItems: NavItem[] = [
         ],
     },
     {
-        icon: <PlugInIcon/>,
+        icon: <PlugInIcon />,
         name: "DEMO Authentication",
         subItems: [
             {name: "Sign In", path: "/signin", pro: false},
@@ -201,29 +215,25 @@ const AppSidebar: React.FC = () => {
                                         >
                                             {subItem.name}
                                             <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                            <span
-                                className={`ml-auto ${
-                                    isActive(subItem.path)
-                                        ? "menu-dropdown-badge-active"
-                                        : "menu-dropdown-badge-inactive"
-                                } menu-dropdown-badge `}
-                            >
-                            new
-                          </span>
-                        )}
+                                             {subItem.new && (
+                                                 <span
+                                                     className={`ml-auto ${
+                                                         isActive(subItem.path)
+                                                             ? "menu-dropdown-badge-active"
+                                                             : "menu-dropdown-badge-inactive"
+                                                     } menu-dropdown-badge `}
+                                                 >
+                                                 new
+                                               </span>
+                                             )}
                                                 {subItem.pro && (
                                                     <span
-                                                        className={`ml-auto ${
-                                                            isActive(subItem.path)
-                                                                ? "menu-dropdown-badge-active"
-                                                                : "menu-dropdown-badge-inactive"
-                                                        } menu-dropdown-badge `}
+                                                        className={`ml-auto ${isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"} menu-dropdown-badge `}
                                                     >
-                            pro
-                          </span>
+                                                    pro
+                                                    </span>
                                                 )}
-                      </span>
+                                          </span>
                                         </Link>
                                     </li>
                                 ))}
@@ -251,7 +261,24 @@ const AppSidebar: React.FC = () => {
         // Check if the current path matches any submenu item
         let submenuMatched = false;
         Object.values(MenuType).forEach((menuType) => {
-            const items = menuType === MenuType.MAIN ? navItems : othersItems;
+            let items: NavItem[];
+            switch (menuType) {
+                case MenuType.RGS:
+                    items = rgsNavItems;
+                    break;
+                case MenuType.BUILDER:
+                    items = slotBuilderNavItems;
+                    break;
+                case MenuType.MAIN:
+                    items = navItems;
+                    break;
+                case MenuType.OTHERS:
+                    items = othersItems;
+                    break;
+                default:
+                    items = rgsNavItems;
+                    break;
+            }
             items.forEach((nav, index) => {
                 if (nav.subItems) {
                     nav.subItems.forEach((subItem) => {
@@ -321,22 +348,22 @@ const AppSidebar: React.FC = () => {
             >
                 <Link href="/">
                     {isExpanded || isHovered || isMobileOpen ? (
-                        <>
+                        <div className="relative w-[180px] h-[70px]">
                             <Image
                                 className="dark:hidden"
                                 src="/images/logo/new-logo.svg"
                                 alt="Logo"
-                                width={150}
-                                height={40}
+                                fill
+                                priority
                             />
                             <Image
                                 className="hidden dark:block"
                                 src="/images/logo/new-logo-dark.svg"
                                 alt="Logo"
-                                width={150}
-                                height={40}
+                                fill
+                                priority
                             />
-                        </>
+                        </div>
                     ) : (
                         <Image
                             src="/images/logo/new-logo-icon.svg"
@@ -361,7 +388,7 @@ const AppSidebar: React.FC = () => {
                                 {isExpanded || isHovered || isMobileOpen ? (
                                     "RGS"
                                 ) : (
-                                    <HorizontaLDots/>
+                                    <HorizontaLDots />
                                 )}
                             </h2>
                             {renderMenuItems(rgsNavItems, MenuType.RGS)}
@@ -376,9 +403,26 @@ const AppSidebar: React.FC = () => {
                                 }`}
                             >
                                 {isExpanded || isHovered || isMobileOpen ? (
+                                    "Builder"
+                                ) : (
+                                    <HorizontaLDots />
+                                )}
+                            </h2>
+                            {renderMenuItems(slotBuilderNavItems, MenuType.BUILDER)}
+                        </div>
+
+                        <div>
+                            <h2
+                                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                                    !isExpanded && !isHovered
+                                        ? "lg:justify-center"
+                                        : "justify-start"
+                                }`}
+                            >
+                                {isExpanded || isHovered || isMobileOpen ? (
                                     "Menu"
                                 ) : (
-                                    <HorizontaLDots/>
+                                    <HorizontaLDots />
                                 )}
                             </h2>
                             {renderMenuItems(navItems, MenuType.MAIN)}
@@ -395,14 +439,14 @@ const AppSidebar: React.FC = () => {
                                 {isExpanded || isHovered || isMobileOpen ? (
                                     "Others"
                                 ) : (
-                                    <HorizontaLDots/>
+                                    <HorizontaLDots />
                                 )}
                             </h2>
                             {renderMenuItems(othersItems, MenuType.OTHERS)}
                         </div>
                     </div>
                 </nav>
-                {isExpanded || isHovered || isMobileOpen ? <SidebarWidget/> : null}
+                {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
             </div>
         </aside>
     );
