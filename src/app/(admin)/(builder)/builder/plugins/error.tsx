@@ -19,7 +19,13 @@ export default function Error({
     return (
 
         <div>
-            <PageBreadcrumb pageTitle="All Games" />
+            <PageBreadcrumb
+                pageTitle="All plugins"
+                breadcrumbs={[
+                    { label: "Builder", href: "/builder" },
+                    { label: "Plugins" },
+                ]}
+            />
             <div className="space-y-6">
                 <ComponentCard title="Games">
                     <Alert
