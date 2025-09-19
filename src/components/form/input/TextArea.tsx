@@ -20,7 +20,7 @@ const TextArea: React.FC<TextareaProps> = ({
   name,
   placeholder = "Enter your message", // Default placeholder
   rows = 3, // Default number of rows
-  value = "", // Default value
+  value, // Current value
   onChange, // Callback for changes
   className = "", // Additional custom styles
   disabled = false, // Disabled state
@@ -50,10 +50,10 @@ const TextArea: React.FC<TextareaProps> = ({
         name={name}
         placeholder={placeholder}
         rows={rows}
-        value={value}
         onChange={handleChange}
         disabled={disabled}
         className={textareaClasses}
+        {...(value !== undefined ? { value } : {})}
       />
       {hint && (
         <p
