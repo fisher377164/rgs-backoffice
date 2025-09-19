@@ -11,7 +11,14 @@ export default async function NewPluginPage() {
 
     return (
         <div>
-            <PageBreadcrumb pageTitle="New plugin" />
+            <PageBreadcrumb
+                pageTitle="New plugin"
+                breadcrumbs={[
+                    { label: "Builder", href: "/builder" },
+                    { label: "Plugins", href: "/builder/plugins" },
+                    { label: "New plugin" },
+                ]}
+            />
             <div className="space-y-6">
                 <ComponentCard title="Plugins">
                     <div>Content</div>
