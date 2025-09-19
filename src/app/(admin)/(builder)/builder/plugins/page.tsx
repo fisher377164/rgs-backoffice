@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 };
 
 export default async function PluginsPage() {
-    // TODO: FIX IT
     const games = await fetchPlugins();
 
     return (
