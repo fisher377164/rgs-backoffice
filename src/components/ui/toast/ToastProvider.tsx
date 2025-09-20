@@ -21,7 +21,7 @@ const ToastProvider: FC<PropsWithChildren> = ({ children }) => {
     <>
       {children}
 
-      <div className="pointer-events-none fixed inset-x-0 top-4 z-[9999] flex justify-center px-4 sm:justify-end sm:px-6">
+      <div className="pointer-events-none fixed inset-x-0 bottom-10 z-[9999] flex justify-center px-4 sm:justify-end sm:px-6">
         <div className="flex w-full max-w-sm flex-col gap-4">
           {toasts.map((toast) => (
             <div key={toast.id} className="pointer-events-auto">

@@ -53,7 +53,7 @@ const PageBreadcrumb: React.FC<BreadcrumbProps> = ({ pageTitle, breadcrumbs }) =
                   width="17"
                   height="16"
                   viewBox="0 0 17 16"
-                  fill="none"
+                  fill="#98a2b3"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
