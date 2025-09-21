@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";
-import NewPluginVersionForm from "./NewPluginVersionForm";
+import EditPluginVersionForm from "./EditPluginVersionForm";
 
 export const metadata: Metadata = {
     title: "FiG | New plugin version",
@@ -30,7 +30,7 @@ export default async function NewPluginVersionPage({params}: PluginVersionPagePr
             />
             <div className="space-y-6">
                 <ComponentCard title="New plugin version">
-                    <NewPluginVersionForm pluginId={pluginId} />
+                    <EditPluginVersionForm pluginId={pluginId} />
                 </ComponentCard>
             </div>
         </div>
