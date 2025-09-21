@@ -1,12 +1,15 @@
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import ComponentCard from "@/components/common/ComponentCard";
+import PluginVersionsTable from "@/components/tables/PluginVersionsTable";
+import { ApiError } from "@/lib/apiClient";
+import fetchPluginById from "@/lib/plugins/fetchPluginById";
 import { Metadata } from "next";
-import React from "react";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
-    title: "Next.js Blank Page | TailAdmin - Next.js Dashboard Template",
-    description: "This is Next.js Blank Page TailAdmin Dashboard Template",
+    title: "FiG | Plugin details",
+    description: "Plugin details page",
 };
-
 
 interface PluginPageProps {
     params: {
@@ -14,25 +17,60 @@ interface PluginPageProps {
     };
 }
 
-export default function PluginPage({params}: PluginPageProps) {
+export default async function PluginPage({params}: PluginPageProps) {
+    const { pluginId } = params;
 
-    const pluginId = params.pluginId;
+    try {
+        const plugin = await fetchPluginById(pluginId);
 
-    return (
-        <div>
-            <PageBreadcrumb pageTitle={`Plugin ${pluginId}`}/>
-            <div
-                className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-                <div className="mx-auto w-full max-w-[630px] text-center">
-                    <h3 className="mb-4 font-semibold text-gray-800 text-theme-xl dark:text-white/90 sm:text-2xl">
-                        Card Title Here
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
-                        Start putting content on grids or panels, you can also use different
-                        combinations of grids.Please check out the dashboard and other pages
-                    </p>
+        return (
+            <div>
+                <PageBreadcrumb
+                    pageTitle={`Plugin: ${plugin.name}`}
+                    breadcrumbs={[
+                        { label: "Builder" },
+                        { label: "Plugins", href: "/builder/plugins" },
+                        { label: plugin.name },
+                    ]}
+                />
+                <div className="space-y-6">
+                    <ComponentCard title="Plugin details">
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <div>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Plugin ID</p>
+                                <p className="mt-1 text-base font-semibold text-gray-800 dark:text-white/90">{plugin.id}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Plugin key</p>
+                                <p className="mt-1 text-base font-semibold text-gray-800 dark:text-white/90">{plugin.pluginKey}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Group ID</p>
+                                <p className="mt-1 text-base font-semibold text-gray-800 dark:text-white/90">{plugin.groupId || "—"}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Artifact ID</p>
+                                <p className="mt-1 text-base font-semibold text-gray-800 dark:text-white/90">{plugin.artifactId || "—"}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Description</p>
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                                {plugin.description ? plugin.description : "No description provided."}
+                            </p>
+                        </div>
+                    </ComponentCard>
+                    <ComponentCard title="Versions">
+                        <PluginVersionsTable versions={plugin.versions} pluginId={plugin.id} />
+                    </ComponentCard>
                 </div>
             </div>
-        </div>
-    );
+        );
+    } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+            notFound();
+        }
+
+        throw error;
+    }
 }
