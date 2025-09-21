@@ -6,8 +6,13 @@ import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
-import { createPlugin } from "@/lib/plugins/createPlugin";
+import { updatePlugin } from "@/lib/plugins/updatePlugin";
+import { Plugin } from "@/lib/plugins/pluginType";
 import { showToast } from "@/lib/toastStore";
+
+interface EditPluginFormProps {
+    plugin: Plugin;
+}
 
 type FormValues = {
     name: string;
@@ -15,24 +20,20 @@ type FormValues = {
     groupId: string;
     artifactId: string;
     description: string;
-    version: string;
-    changeLog: string;
-    configuration: string;
 };
 
 type FormField = keyof FormValues;
 
-type RequiredFormField = "name" | "pluginKey" | "groupId" | "artifactId" | "version";
+type RequiredFormField = "name" | "pluginKey" | "groupId" | "artifactId";
 
 const requiredFields: RequiredFormField[] = [
     "name",
     "pluginKey",
     "groupId",
     "artifactId",
-    "version",
 ];
 
-const EditPluginForm = () => {
+const EditPluginForm = ({ plugin }: EditPluginFormProps) => {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<FormField, string>>>({});
@@ -73,9 +74,6 @@ const EditPluginForm = () => {
             groupId: String(formData.get("groupId") ?? "").trim(),
             artifactId: String(formData.get("artifactId") ?? "").trim(),
             description: String(formData.get("description") ?? "").trim(),
-            version: String(formData.get("version") ?? "").trim(),
-            changeLog: String(formData.get("changeLog") ?? "").trim(),
-            configuration: String(formData.get("configuration") ?? "").trim(),
         };
 
         const validationErrors: Partial<Record<FormField, string>> = {};
@@ -95,28 +93,24 @@ const EditPluginForm = () => {
         setIsSubmitting(true);
 
         try {
-            await createPlugin({
+            await updatePlugin(plugin.id, {
                 name: values.name,
                 pluginKey: values.pluginKey,
                 groupId: values.groupId,
                 artifactId: values.artifactId,
-                version: values.version,
                 description: values.description.length ? values.description : undefined,
-                changeLog: values.changeLog.length ? values.changeLog : undefined,
-                configuration: values.configuration.length ? values.configuration : undefined,
             });
 
             showToast({
                 variant: "success",
-                title: "Plugin created",
-                message: `${values.name} has been created successfully.`,
+                title: "Plugin updated",
+                message: `${values.name} has been updated successfully.`,
                 hideButtonLabel: "Dismiss",
             });
 
-            router.push("/builder/plugins");
+            router.push(`/builder/plugins/${plugin.id}`);
         } catch (error) {
-            // Errors are handled by the API client, so we just log for debugging purposes.
-            console.error("Failed to create plugin", error);
+            console.error("Failed to update plugin", error);
         } finally {
             setIsSubmitting(false);
         }
@@ -133,6 +127,7 @@ const EditPluginForm = () => {
                         id="name"
                         name="name"
                         placeholder="Enter plugin name"
+                        defaultValue={plugin.name}
                         required
                         onChange={handleInputChange("name")}
                         error={Boolean(errors.name)}
@@ -147,6 +142,7 @@ const EditPluginForm = () => {
                         id="pluginKey"
                         name="pluginKey"
                         placeholder="Enter plugin key"
+                        defaultValue={plugin.pluginKey}
                         required
                         onChange={handleInputChange("pluginKey")}
                         error={Boolean(errors.pluginKey)}
@@ -163,6 +159,7 @@ const EditPluginForm = () => {
                         id="groupId"
                         name="groupId"
                         placeholder="Enter group ID"
+                        defaultValue={plugin.groupId}
                         required
                         onChange={handleInputChange("groupId")}
                         error={Boolean(errors.groupId)}
@@ -177,6 +174,7 @@ const EditPluginForm = () => {
                         id="artifactId"
                         name="artifactId"
                         placeholder="Enter artifact ID"
+                        defaultValue={plugin.artifactId}
                         required
                         onChange={handleInputChange("artifactId")}
                         error={Boolean(errors.artifactId)}
@@ -191,38 +189,7 @@ const EditPluginForm = () => {
                     name="description"
                     placeholder="Add plugin description"
                     rows={3}
-                />
-            </div>
-            <div>
-                <Label htmlFor="version">
-                    Version<span className="text-error-500">*</span>
-                </Label>
-                <Input
-                    id="version"
-                    name="version"
-                    placeholder="Enter plugin version"
-                    required
-                    onChange={handleInputChange("version")}
-                    error={Boolean(errors.version)}
-                    hint={errors.version}
-                />
-            </div>
-            <div>
-                <Label htmlFor="changeLog">Change log</Label>
-                <TextArea
-                    id="changeLog"
-                    name="changeLog"
-                    placeholder="Describe the changes in this version"
-                    rows={4}
-                />
-            </div>
-            <div>
-                <Label htmlFor="configuration">Configuration</Label>
-                <TextArea
-                    id="configuration"
-                    name="configuration"
-                    placeholder="Add plugin configuration"
-                    rows={4}
+                    defaultValue={plugin.description}
                 />
             </div>
             <div className="flex justify-end">
@@ -231,7 +198,7 @@ const EditPluginForm = () => {
                     className="min-w-32 justify-center"
                     disabled={isSubmitting}
                 >
-                    {isSubmitting ? "Creating..." : "Create plugin"}
+                    {isSubmitting ? "Saving..." : "Save changes"}
                 </Button>
             </div>
         </form>

@@ -6,11 +6,13 @@ import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
-import { createPluginVersion } from "@/lib/plugins/createPluginVersion";
+import { PluginVersion } from "@/lib/plugins/pluginType";
+import { updatePluginVersion } from "@/lib/plugins/updatePluginVersion";
 import { showToast } from "@/lib/toastStore";
 
-interface NewPluginVersionFormProps {
-        pluginId: string;
+interface EditPluginVersionFormProps {
+    pluginId: string;
+    pluginVersion: PluginVersion;
 }
 
 type FormValues = {
@@ -24,7 +26,7 @@ type RequiredFormField = "version" | "configuration";
 
 const requiredFields: RequiredFormField[] = ["version", "configuration"];
 
-const EditPluginVersionForm = ({pluginId}: NewPluginVersionFormProps) => {
+const EditPluginVersionForm = ({ pluginId, pluginVersion }: EditPluginVersionFormProps) => {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<FormField, string>>>({});
@@ -92,7 +94,7 @@ const EditPluginVersionForm = ({pluginId}: NewPluginVersionFormProps) => {
         setIsSubmitting(true);
 
         try {
-            await createPluginVersion(pluginId, {
+            await updatePluginVersion(pluginId, pluginVersion.id, {
                 version: values.version,
                 configuration: values.configuration,
                 changeLog: values.changeLog.length ? values.changeLog : undefined,
@@ -100,14 +102,14 @@ const EditPluginVersionForm = ({pluginId}: NewPluginVersionFormProps) => {
 
             showToast({
                 variant: "success",
-                title: "Plugin version created",
-                message: `Version ${values.version} has been created successfully.`,
+                title: "Plugin version updated",
+                message: `Version ${values.version} has been updated successfully.`,
                 hideButtonLabel: "Dismiss",
             });
 
             router.push(`/builder/plugins/${pluginId}`);
         } catch (error) {
-            console.error("Failed to create plugin version", error);
+            console.error("Failed to update plugin version", error);
         } finally {
             setIsSubmitting(false);
         }
@@ -123,6 +125,7 @@ const EditPluginVersionForm = ({pluginId}: NewPluginVersionFormProps) => {
                     id="version"
                     name="version"
                     placeholder="Enter plugin version"
+                    defaultValue={pluginVersion.version}
                     required
                     onChange={handleRequiredInputChange("version")}
                     error={Boolean(errors.version)}
@@ -136,6 +139,7 @@ const EditPluginVersionForm = ({pluginId}: NewPluginVersionFormProps) => {
                     name="changeLog"
                     placeholder="Add change log notes"
                     rows={4}
+                    defaultValue={pluginVersion.changeLog}
                 />
             </div>
             <div>
@@ -147,6 +151,7 @@ const EditPluginVersionForm = ({pluginId}: NewPluginVersionFormProps) => {
                     name="configuration"
                     placeholder="Add plugin configuration"
                     rows={6}
+                    defaultValue={pluginVersion.configuration}
                     onChange={handleConfigurationChange}
                     error={Boolean(errors.configuration)}
                     hint={errors.configuration}
@@ -158,7 +163,7 @@ const EditPluginVersionForm = ({pluginId}: NewPluginVersionFormProps) => {
                     className="min-w-32 justify-center"
                     disabled={isSubmitting}
                 >
-                    {isSubmitting ? "Creating..." : "Create version"}
+                    {isSubmitting ? "Saving..." : "Save changes"}
                 </Button>
             </div>
         </form>
