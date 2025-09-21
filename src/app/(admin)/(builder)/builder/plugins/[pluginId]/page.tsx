@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 interface PluginPageProps {
     params: Promise<{
         pluginId: string;
-    }>;
+    }>
 }
 
 export default async function PluginPage({params}: PluginPageProps) {
