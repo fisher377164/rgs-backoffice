@@ -5,13 +5,15 @@ import React, { useCallback, useMemo } from "react";
 import ConfigurableTable, { TableConfig } from "@/components/tables/ConfigurableTable";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { Plugin } from "@/lib/plugins/pluginType";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface PluginsTableProps {
     data: Plugin[];
 }
 
 const PluginsTable = ({data}: PluginsTableProps) => {
+    const router = useRouter();
+
     const handleEditPlugin = useCallback((plugin: Plugin) => {
         console.log(`Edit plugin ${plugin.id}`);
     }, []);
@@ -19,6 +21,13 @@ const PluginsTable = ({data}: PluginsTableProps) => {
     const handleRemovePlugin = useCallback((plugin: Plugin) => {
         console.log(`Remove plugin ${plugin.id}`);
     }, []);
+
+    const handleNavigateToPlugin = useCallback(
+        (plugin: Plugin) => {
+            router.push(`/builder/plugins/${plugin.id}`);
+        },
+        [router],
+    );
 
     const tableConfig = useMemo<TableConfig<Plugin>>(
         () => ({
@@ -38,15 +47,9 @@ const PluginsTable = ({data}: PluginsTableProps) => {
                         <div
                             className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
                             <div
-                                className="flex items-center justify-between border-b border-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 dark:border-white/[0.05] dark:text-gray-200"
+                                className="border-b border-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 dark:border-white/[0.05] dark:text-gray-200"
                             >
                                 <span>Versions</span>
-                                <Link
-                                    href={`/builder/plugins/${row.id}/versions/new`}
-                                    className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600"
-                                >
-                                    New Version
-                                </Link>
                             </div>
                             <div className="max-w-full overflow-x-auto">
                                 <Table className="min-w-[600px]">
@@ -131,6 +134,7 @@ const PluginsTable = ({data}: PluginsTableProps) => {
                     },
                 },
             },
+            onRowClick: handleNavigateToPlugin,
             fields: [
                 {
                     key: "id",
@@ -170,7 +174,7 @@ const PluginsTable = ({data}: PluginsTableProps) => {
                 },
             ],
         }),
-        [handleEditPlugin, handleRemovePlugin]
+        [handleEditPlugin, handleNavigateToPlugin, handleRemovePlugin]
     );
 
     return <ConfigurableTable data={data} config={tableConfig} />;

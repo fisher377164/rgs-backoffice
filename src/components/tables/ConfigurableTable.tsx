@@ -69,6 +69,7 @@ export interface TableExpandableConfig<T> {
 export interface TableConfig<T> {
   name?: string;
   fields: TableField<T>[];
+  headerAction?: React.ReactNode;
   enableSorting?: boolean;
   enableSearch?: boolean;
   enablePagination?: boolean;
@@ -77,6 +78,7 @@ export interface TableConfig<T> {
   getRowKey?: (row: T, index: number) => string | number;
   actions?: TableActions<T>;
   expandable?: TableExpandableConfig<T>;
+  onRowClick?: (row: T) => void;
 }
 
 interface ConfigurableTableProps<T extends object> {
@@ -329,16 +331,20 @@ const ConfigurableTable = <T extends object>({
   const totalColumns =
     config.fields.length + (hasActions ? 1 : 0) + (config.expandable ? 1 : 0);
   const baseRowIndex = enablePagination ? (currentPage - 1) * itemsPerPage : 0;
+  const isRowClickable = Boolean(config.onRowClick);
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-4 dark:border-white/[0.05]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          {config.name && (
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              {config.name}
-            </h3>
-          )}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            {config.name && (
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                {config.name}
+              </h3>
+            )}
+            {config.headerAction && <div className="sm:ml-2">{config.headerAction}</div>}
+          </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             {enableSearch && (
               <div className="relative">
@@ -460,10 +466,22 @@ const ConfigurableTable = <T extends object>({
                 const absoluteIndex = baseRowIndex + rowIndex;
                 const rowKey = computeRowKey(row, absoluteIndex);
                 const isExpanded = expandedRows.has(rowKey);
+                const handleRowClick = config.onRowClick
+                  ? () => {
+                      config.onRowClick?.(row);
+                    }
+                  : undefined;
 
                 return (
                   <React.Fragment key={String(rowKey)}>
-                    <TableRow>
+                    <TableRow
+                      onClick={handleRowClick}
+                      className={
+                        isRowClickable
+                          ? "cursor-pointer transition-colors hover:bg-gray-50/80 dark:hover:bg-white/[0.05]"
+                          : undefined
+                      }
+                    >
                       {config.expandable && (
                         <TableCell
                           className={`px-4 py-3 text-center ${
@@ -474,15 +492,18 @@ const ConfigurableTable = <T extends object>({
                               ? { width: config.expandable.toggleColumn.width }
                               : undefined
                           }
-                        >
-                          <button
-                            type="button"
-                            onClick={() => toggleRowExpansion(rowKey)}
-                            aria-label={isExpanded ? "Collapse row" : "Expand row"}
-                            aria-expanded={isExpanded}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-gray-200 text-sm font-medium text-gray-500 transition-colors hover:border-brand-300 hover:text-brand-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:text-gray-400 dark:hover:text-white"
                           >
-                            {isExpanded ? "−" : "+"}
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleRowExpansion(rowKey);
+                              }}
+                              aria-label={isExpanded ? "Collapse row" : "Expand row"}
+                              aria-expanded={isExpanded}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded border border-gray-200 text-sm font-medium text-gray-500 transition-colors hover:border-brand-300 hover:text-brand-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:text-gray-400 dark:hover:text-white"
+                            >
+                              {isExpanded ? "−" : "+"}
                           </button>
                         </TableCell>
                       )}
@@ -528,7 +549,10 @@ const ConfigurableTable = <T extends object>({
                                 size="sm"
                                 variant={actionsConfig.edit.buttonProps?.variant ?? "outline"}
                                 className={actionsConfig.edit.buttonProps?.className}
-                                onClick={() => actionsConfig.edit?.onClick?.(row)}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  actionsConfig.edit?.onClick?.(row);
+                                }}
                               >
                                 {actionsConfig.edit.label ?? "Edit"}
                               </Button>
@@ -540,7 +564,10 @@ const ConfigurableTable = <T extends object>({
                                 className={
                                   actionsConfig.remove.buttonProps?.className ?? "text-red-500"
                                 }
-                                onClick={() => actionsConfig.remove?.onClick?.(row)}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  actionsConfig.remove?.onClick?.(row);
+                                }}
                               >
                                 {actionsConfig.remove.label ?? "Remove"}
                               </Button>
