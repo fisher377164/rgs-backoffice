@@ -4,7 +4,11 @@ import { Plugin } from "@/lib/plugins/pluginType";
 export interface CreatePluginPayload {
     name: string;
     pluginKey: string;
+    groupId?: string;
+    artifactId?: string;
     version: string;
+    description?: string;
+    changeLog?: string;
     configuration?: string;
 }
 
