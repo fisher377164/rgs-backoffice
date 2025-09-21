@@ -38,10 +38,9 @@ const PluginsTable = ({data}: PluginsTableProps) => {
                         <div
                             className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
                             <div
-                                className="border-b border-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 dark:border-white/[0.05] dark:text-gray-200">
-                                Versions
-                            </div>
-                            <div className="shrink-0">
+                                className="flex items-center justify-between border-b border-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 dark:border-white/[0.05] dark:text-gray-200"
+                            >
+                                <span>Versions</span>
                                 <Link
                                     href={`/builder/plugins/${row.id}/versions/new`}
                                     className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600"

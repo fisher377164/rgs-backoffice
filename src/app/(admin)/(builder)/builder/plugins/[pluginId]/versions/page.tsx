@@ -18,8 +18,9 @@ interface PluginPageProps {
 
 export default async function PluginsPage({params}: PluginPageProps) {
 
-    // const pluginId = params.pluginId;
+    void params;
 
+    // const pluginId = params.pluginId;
 
     const plugins = await fetchPlugins();
 
