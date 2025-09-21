@@ -3,6 +3,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 import PluginVersionsTable from "@/components/tables/PluginVersionsTable";
 import { ApiError } from "@/lib/apiClient";
 import fetchPluginById from "@/lib/plugins/fetchPluginById";
+import Link from "next/link";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -14,10 +15,10 @@ export const metadata: Metadata = {
 interface PluginPageProps {
     params: Promise<{
         pluginId: string;
-    }>
+    }>;
 }
 
-export default async function PluginPage({params}: PluginPageProps) {
+export default async function PluginPage({ params }: PluginPageProps) {
     const { pluginId } = await params;
 
     try {
@@ -34,7 +35,17 @@ export default async function PluginPage({params}: PluginPageProps) {
                     ]}
                 />
                 <div className="space-y-6">
-                    <ComponentCard title="Plugin details">
+                    <ComponentCard
+                        title="Plugin details"
+                        action={
+                            <Link
+                                href={`/builder/plugins/${plugin.id}/edit`}
+                                className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600"
+                            >
+                                Edit
+                            </Link>
+                        }
+                    >
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
                                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Plugin ID</p>

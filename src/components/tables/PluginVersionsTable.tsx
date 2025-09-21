@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import ConfigurableTable, { TableConfig } from "@/components/tables/ConfigurableTable";
+import { fetchData } from "@/lib/apiClient";
 import { PluginVersion } from "@/lib/plugins/pluginType";
+import { showToast } from "@/lib/toastStore";
 
 interface PluginVersionsTableProps {
     versions: PluginVersion[];
@@ -12,7 +15,42 @@ interface PluginVersionsTableProps {
 }
 
 const PluginVersionsTable = ({ versions, pluginId }: PluginVersionsTableProps) => {
+    const router = useRouter();
     const sanitizedPluginId = String(pluginId);
+
+    const handleEditVersion = useCallback(
+        (version: PluginVersion) => {
+            router.push(`/builder/plugins/${sanitizedPluginId}/versions/${version.id}/edit`);
+        },
+        [router, sanitizedPluginId],
+    );
+
+    const handleRemoveVersion = useCallback(
+        async (version: PluginVersion) => {
+            const confirmed = window.confirm("If user sure to delete?");
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                await fetchData<void>(`/v1/plugins/${sanitizedPluginId}/versions/${version.id}`, {
+                    method: "DELETE",
+                });
+
+                showToast({
+                    variant: "success",
+                    title: "Version removed",
+                    message: `Version ${version.version} has been removed successfully.`,
+                    hideButtonLabel: "Dismiss",
+                });
+
+                router.refresh();
+            } catch (error) {
+                console.error(`Failed to remove version ${version.id}`, error);
+            }
+        },
+        [router, sanitizedPluginId],
+    );
 
     const tableConfig = useMemo<TableConfig<PluginVersion>>(
         () => ({
@@ -31,6 +69,20 @@ const PluginVersionsTable = ({ versions, pluginId }: PluginVersionsTableProps) =
             defaultItemsPerPage: 5,
             itemsPerPageOptions: [5, 10, 20],
             getRowKey: (row) => row.id ?? row.version,
+            actions: {
+                align: "end",
+                edit: {
+                    label: "Edit",
+                    onClick: handleEditVersion,
+                },
+                remove: {
+                    label: "Remove",
+                    onClick: handleRemoveVersion,
+                    buttonProps: {
+                        className: "text-red-500",
+                    },
+                },
+            },
             fields: [
                 {
                     key: "id",
@@ -60,7 +112,7 @@ const PluginVersionsTable = ({ versions, pluginId }: PluginVersionsTableProps) =
                 },
             ],
         }),
-        [sanitizedPluginId],
+        [handleEditVersion, handleRemoveVersion, sanitizedPluginId],
     );
 
     return <ConfigurableTable data={versions} config={tableConfig} />;
