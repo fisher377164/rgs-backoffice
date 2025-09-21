@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";
-import NewPluginForm from "./NewPluginForm";
+import NewPluginVersionForm from "./NewPluginVersionForm";
 
 export const metadata: Metadata = {
     title: "FiG | New plugin version",
@@ -23,14 +23,14 @@ export default async function NewPluginVersionPage({params}: PluginVersionPagePr
             <PageBreadcrumb
                 pageTitle="New plugin version"
                 breadcrumbs={[
-                    { label: "Builder" },
-                    { label: "Plugins", href: "/builder/plugins" },
-                    { label: `Plugin ${pluginId}`, href: `/builder/plugins/${pluginId}` },
+                    {label: "Builder"},
+                    {label: "Plugins", href: "/builder/plugins"},
+                    {label: `Plugin ${pluginId}`, href: `/builder/plugins/${pluginId}`},
                 ]}
             />
             <div className="space-y-6">
-                <ComponentCard title="Plugins">
-                    <NewPluginForm />
+                <ComponentCard title="New plugin version">
+                    <NewPluginVersionForm pluginId={pluginId} />
                 </ComponentCard>
             </div>
         </div>

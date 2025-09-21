@@ -9,7 +9,11 @@ import Button from "@/components/ui/button/Button";
 import { createPlugin } from "@/lib/plugins/createPlugin";
 import { showToast } from "@/lib/toastStore";
 
-const NewPluginForm = () => {
+interface NewPluginVersionFormProps {
+        pluginId: string;
+}
+
+const NewPluginVersionForm = ({pluginId}: NewPluginVersionFormProps) => {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -47,7 +51,7 @@ const NewPluginForm = () => {
                 hideButtonLabel: "Dismiss",
             });
 
-            router.push("/builder/plugins");
+            router.push(`/builder/plugins/${pluginId}/versions`);
         } catch (error) {
             // Errors are handled by the API client, so we just log for debugging purposes.
             console.error("Failed to create plugin", error);
@@ -110,4 +114,4 @@ const NewPluginForm = () => {
     );
 };
 
-export default NewPluginForm;
+export default NewPluginVersionForm;
