@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
@@ -9,9 +9,53 @@ import Button from "@/components/ui/button/Button";
 import { createPlugin } from "@/lib/plugins/createPlugin";
 import { showToast } from "@/lib/toastStore";
 
+type FormValues = {
+    name: string;
+    pluginKey: string;
+    groupId: string;
+    artifactId: string;
+    description: string;
+    version: string;
+    changeLog: string;
+    configuration: string;
+};
+
+type FormField = keyof FormValues;
+
+type RequiredFormField = "name" | "pluginKey" | "groupId" | "artifactId" | "version";
+
+const requiredFields: RequiredFormField[] = [
+    "name",
+    "pluginKey",
+    "groupId",
+    "artifactId",
+    "version",
+];
+
 const NewPluginForm = () => {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState<Partial<Record<FormField, string>>>({});
+
+    const handleInputChange = (field: RequiredFormField) => (
+        event: ChangeEvent<HTMLInputElement>,
+    ) => {
+        if (!errors[field]) {
+            return;
+        }
+
+        const trimmedValue = event.target.value.trim();
+
+        if (!trimmedValue.length) {
+            return;
+        }
+
+        setErrors((previousErrors) => {
+            const updatedErrors = { ...previousErrors };
+            delete updatedErrors[field];
+            return updatedErrors;
+        });
+    };
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -23,27 +67,49 @@ const NewPluginForm = () => {
         const form = event.currentTarget;
         const formData = new FormData(form);
 
-        const name = String(formData.get("name") ?? "").trim();
-        const pluginKey = String(formData.get("pluginKey") ?? "").trim();
-        const version = String(formData.get("version") ?? "").trim();
-        const configurationValue = formData.get("configuration");
-        const configuration =
-            configurationValue !== null ? String(configurationValue).trim() : undefined;
+        const values: FormValues = {
+            name: String(formData.get("name") ?? "").trim(),
+            pluginKey: String(formData.get("pluginKey") ?? "").trim(),
+            groupId: String(formData.get("groupId") ?? "").trim(),
+            artifactId: String(formData.get("artifactId") ?? "").trim(),
+            description: String(formData.get("description") ?? "").trim(),
+            version: String(formData.get("version") ?? "").trim(),
+            changeLog: String(formData.get("changeLog") ?? "").trim(),
+            configuration: String(formData.get("configuration") ?? "").trim(),
+        };
 
+        const validationErrors: Partial<Record<FormField, string>> = {};
+
+        requiredFields.forEach((field) => {
+            if (!values[field].length) {
+                validationErrors[field] = "This field is required.";
+            }
+        });
+
+        if (Object.keys(validationErrors).length) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        setErrors({});
         setIsSubmitting(true);
 
         try {
             await createPlugin({
-                name,
-                pluginKey,
-                version,
-                configuration: configuration?.length ? configuration : undefined,
+                name: values.name,
+                pluginKey: values.pluginKey,
+                groupId: values.groupId,
+                artifactId: values.artifactId,
+                version: values.version,
+                description: values.description.length ? values.description : undefined,
+                changeLog: values.changeLog.length ? values.changeLog : undefined,
+                configuration: values.configuration.length ? values.configuration : undefined,
             });
 
             showToast({
                 variant: "success",
                 title: "Plugin created",
-                message: `${name} has been created successfully.`,
+                message: `${values.name} has been created successfully.`,
                 hideButtonLabel: "Dismiss",
             });
 
@@ -63,7 +129,15 @@ const NewPluginForm = () => {
                     <Label htmlFor="name">
                         Name<span className="text-error-500">*</span>
                     </Label>
-                    <Input id="name" name="name" placeholder="Enter plugin name" required />
+                    <Input
+                        id="name"
+                        name="name"
+                        placeholder="Enter plugin name"
+                        required
+                        onChange={handleInputChange("name")}
+                        error={Boolean(errors.name)}
+                        hint={errors.name}
+                    />
                 </div>
                 <div>
                     <Label htmlFor="pluginKey">
@@ -74,8 +148,50 @@ const NewPluginForm = () => {
                         name="pluginKey"
                         placeholder="Enter plugin key"
                         required
+                        onChange={handleInputChange("pluginKey")}
+                        error={Boolean(errors.pluginKey)}
+                        hint={errors.pluginKey}
                     />
                 </div>
+            </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div>
+                    <Label htmlFor="groupId">
+                        Group ID<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                        id="groupId"
+                        name="groupId"
+                        placeholder="Enter group ID"
+                        required
+                        onChange={handleInputChange("groupId")}
+                        error={Boolean(errors.groupId)}
+                        hint={errors.groupId}
+                    />
+                </div>
+                <div>
+                    <Label htmlFor="artifactId">
+                        Artifact ID<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                        id="artifactId"
+                        name="artifactId"
+                        placeholder="Enter artifact ID"
+                        required
+                        onChange={handleInputChange("artifactId")}
+                        error={Boolean(errors.artifactId)}
+                        hint={errors.artifactId}
+                    />
+                </div>
+            </div>
+            <div>
+                <Label htmlFor="description">Description</Label>
+                <TextArea
+                    id="description"
+                    name="description"
+                    placeholder="Add plugin description"
+                    rows={3}
+                />
             </div>
             <div>
                 <Label htmlFor="version">
@@ -86,6 +202,18 @@ const NewPluginForm = () => {
                     name="version"
                     placeholder="Enter plugin version"
                     required
+                    onChange={handleInputChange("version")}
+                    error={Boolean(errors.version)}
+                    hint={errors.version}
+                />
+            </div>
+            <div>
+                <Label htmlFor="changeLog">Change log</Label>
+                <TextArea
+                    id="changeLog"
+                    name="changeLog"
+                    placeholder="Describe the changes in this version"
+                    rows={4}
                 />
             </div>
             <div>
