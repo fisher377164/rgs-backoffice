@@ -12,13 +12,13 @@ export const metadata: Metadata = {
 };
 
 interface PluginPageProps {
-    params: {
+    params: Promise<{
         pluginId: string;
-    };
+    }>;
 }
 
 export default async function PluginPage({params}: PluginPageProps) {
-    const { pluginId } = params;
+    const { pluginId } = await params;
 
     try {
         const plugin = await fetchPluginById(pluginId);
