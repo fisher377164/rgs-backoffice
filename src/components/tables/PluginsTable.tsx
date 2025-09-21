@@ -4,23 +4,51 @@ import React, { useCallback, useMemo } from "react";
 
 import ConfigurableTable, { TableConfig } from "@/components/tables/ConfigurableTable";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { fetchData } from "@/lib/apiClient";
 import { Plugin } from "@/lib/plugins/pluginType";
+import { showToast } from "@/lib/toastStore";
 import { useRouter } from "next/navigation";
 
 interface PluginsTableProps {
     data: Plugin[];
 }
 
-const PluginsTable = ({data}: PluginsTableProps) => {
+const PluginsTable = ({ data }: PluginsTableProps) => {
     const router = useRouter();
 
-    const handleEditPlugin = useCallback((plugin: Plugin) => {
-        console.log(`Edit plugin ${plugin.id}`);
-    }, []);
+    const handleEditPlugin = useCallback(
+        (plugin: Plugin) => {
+            router.push(`/builder/plugins/${plugin.id}/edit`);
+        },
+        [router],
+    );
 
-    const handleRemovePlugin = useCallback((plugin: Plugin) => {
-        console.log(`Remove plugin ${plugin.id}`);
-    }, []);
+    const handleRemovePlugin = useCallback(
+        async (plugin: Plugin) => {
+            const confirmed = window.confirm("If user sure to delete?");
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                await fetchData<void>(`/v1/plugins/${plugin.id}`, {
+                    method: "DELETE",
+                });
+
+                showToast({
+                    variant: "success",
+                    title: "Plugin removed",
+                    message: `${plugin.name} has been removed successfully.`,
+                    hideButtonLabel: "Dismiss",
+                });
+
+                router.refresh();
+            } catch (error) {
+                console.error(`Failed to remove plugin ${plugin.id}`, error);
+            }
+        },
+        [router],
+    );
 
     const handleNavigateToPlugin = useCallback(
         (plugin: Plugin) => {
