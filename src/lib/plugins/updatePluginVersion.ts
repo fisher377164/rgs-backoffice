@@ -13,7 +13,7 @@ export const updatePluginVersion = async (
     payload: UpdatePluginVersionPayload,
 ): Promise<PluginVersion> => {
     return fetchData<PluginVersion>(`/v1/plugins/${pluginId}/versions/${versionId}`, {
-        method: "POST",
+        method: "PUT",
         headers: {
             "Content-Type": "application/json",
             accept: "*/*",

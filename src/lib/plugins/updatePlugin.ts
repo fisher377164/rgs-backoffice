@@ -14,7 +14,7 @@ export const updatePlugin = async (
     payload: UpdatePluginPayload,
 ): Promise<Plugin> => {
     return fetchData<Plugin>(`/v1/plugins/${pluginId}`, {
-        method: "POST",
+        method: "PUT",
         headers: {
             "Content-Type": "application/json",
             accept: "*/*",

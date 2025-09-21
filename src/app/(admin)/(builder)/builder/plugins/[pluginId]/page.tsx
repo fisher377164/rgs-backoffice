@@ -27,11 +27,10 @@ export default async function PluginPage({ params }: PluginPageProps) {
         return (
             <div>
                 <PageBreadcrumb
-                    pageTitle={`Plugin: ${plugin.name}`}
+                    pageTitle={`Plugin: ${plugin.id}`}
                     breadcrumbs={[
                         { label: "Builder" },
                         { label: "Plugins", href: "/builder/plugins" },
-                        { label: plugin.name },
                     ]}
                 />
                 <div className="space-y-6">

@@ -26,12 +26,11 @@ export default async function EditPluginPage({ params }: EditPluginPageProps) {
         return (
             <div>
                 <PageBreadcrumb
-                    pageTitle={`Edit plugin: ${plugin.name}`}
+                    pageTitle={`Edit plugin: ${plugin.id}`}
                     breadcrumbs={[
                         { label: "Builder" },
                         { label: "Plugins", href: "/builder/plugins" },
-                        { label: plugin.name, href: `/builder/plugins/${plugin.id}` },
-                        { label: "Edit plugin" },
+                        { label: `Plugin ${pluginId}`, href: `/builder/plugins/${pluginId}` },
                     ]}
                 />
                 <div className="space-y-6">
