@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from "react";
 
 import ConfigurableTable, { TableConfig } from "@/components/tables/ConfigurableTable";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { Plugin } from "@/lib/plugins/pluginType";
 
 interface PluginsTableProps {
@@ -27,6 +28,95 @@ const PluginsTable = ({ data }: PluginsTableProps) => {
       defaultItemsPerPage: 10,
       itemsPerPageOptions: [5, 10, 20],
       getRowKey: (row) => row.id,
+      expandable: {
+        toggleColumn: {
+          width: "3rem",
+        },
+        renderContent: (row) => (
+          <div className="space-y-4">
+            <div className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
+              <p>
+                <span className="font-medium text-gray-700 dark:text-gray-200">Description:</span>{" "}
+                {row.description ? row.description : "No description provided."}
+              </p>
+              <p>
+                <span className="font-medium text-gray-700 dark:text-gray-200">Group ID:</span>{" "}
+                {row.groupId || "N/A"}
+              </p>
+              <p>
+                <span className="font-medium text-gray-700 dark:text-gray-200">Artifact ID:</span>{" "}
+                {row.artifactId || "N/A"}
+              </p>
+            </div>
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
+              <div className="border-b border-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 dark:border-white/[0.05] dark:text-gray-200">
+                Versions
+              </div>
+              <div className="max-w-full overflow-x-auto">
+                <Table className="min-w-[600px]">
+                  <TableHeader className="bg-gray-50 dark:bg-white/[0.02]">
+                    <TableRow>
+                      <TableCell
+                        isHeader
+                        className="px-4 py-2 text-left text-theme-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                      >
+                        ID
+                      </TableCell>
+                      <TableCell
+                        isHeader
+                        className="px-4 py-2 text-left text-theme-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                      >
+                        Version
+                      </TableCell>
+                      <TableCell
+                        isHeader
+                        className="px-4 py-2 text-left text-theme-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                      >
+                        Change log
+                      </TableCell>
+                      <TableCell
+                        isHeader
+                        className="px-4 py-2 text-left text-theme-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                      >
+                        Configuration
+                      </TableCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                    {row.versions.length > 0 ? (
+                      row.versions.map((version) => (
+                        <TableRow key={version.id}>
+                          <TableCell className="px-4 py-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                            {version.id}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                            {version.version}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                            {version.changeLog || "—"}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                            {version.configuration || "—"}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="px-4 py-4 text-center text-theme-sm text-gray-500 dark:text-gray-400"
+                        >
+                          No versions available.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </div>
+        ),
+      },
       actions: {
         align: "end",
         edit: {
@@ -59,6 +149,18 @@ const PluginsTable = ({ data }: PluginsTableProps) => {
           key: "name",
           label: "Name",
           dataKey: "name",
+          sortable: true,
+        },
+        {
+          key: "groupId",
+          label: "Group ID",
+          dataKey: "groupId",
+          sortable: true,
+        },
+        {
+          key: "artifactId",
+          label: "Artifact ID",
+          dataKey: "artifactId",
           sortable: true,
         },
       ],
