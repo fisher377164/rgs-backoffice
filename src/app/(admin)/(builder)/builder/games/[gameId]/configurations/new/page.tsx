@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 };
 
 interface NewGameConfigurationPageProps {
-  params: {
+  params: Promise<{
     gameId: string;
-  };
+  }>;
 }
 
 const parseGameId = (value: string): number => {
@@ -28,7 +28,8 @@ const parseGameId = (value: string): number => {
 export default async function NewGameConfigurationPage({
   params,
 }: NewGameConfigurationPageProps) {
-  const gameId = parseGameId(params.gameId);
+  const { gameId: gameIdParam } = await params;
+  const gameId = parseGameId(gameIdParam);
 
   return (
     <div>

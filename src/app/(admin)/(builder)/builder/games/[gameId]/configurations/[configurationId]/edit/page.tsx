@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 };
 
 interface EditGameConfigurationPageProps {
-  params: {
+  params: Promise<{
     gameId: string;
     configurationId: string;
-  };
+  }>;
 }
 
 const parseId = (value: string): number => {
@@ -31,8 +31,10 @@ const parseId = (value: string): number => {
 export default async function EditGameConfigurationPage({
   params,
 }: EditGameConfigurationPageProps) {
-  const gameId = parseId(params.gameId);
-  const configurationId = parseId(params.configurationId);
+  const { gameId: gameIdParam, configurationId: configurationIdParam } =
+    await params;
+  const gameId = parseId(gameIdParam);
+  const configurationId = parseId(configurationIdParam);
 
   const [game, configuration] = await Promise.all([
     fetchGameById(gameId),
