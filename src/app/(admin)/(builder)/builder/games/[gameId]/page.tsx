@@ -1,38 +1,87 @@
-import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Link from "next/link";
 import { Metadata } from "next";
-import React from "react";
+
+import ComponentCard from "@/components/common/ComponentCard";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import GameConfigurationsTable from "@/components/tables/GameConfigurationsTable";
+import { fetchGameById } from "@/lib/games/fetchGameById";
+import { fetchGameConfigurations } from "@/lib/game-configurations/fetchGameConfigurations";
 
 export const metadata: Metadata = {
-    title: "Next.js Blank Page | TailAdmin - Next.js Dashboard Template",
-    description: "This is Next.js Blank Page TailAdmin Dashboard Template",
+  title: "FiG | Game details",
+  description: "Game details page",
 };
 
-
 interface GamePageProps {
-    params: {
-        gameId: string;
-    };
+  params: {
+    gameId: string;
+  };
 }
 
-export default function GamePage({params}: GamePageProps) {
+const parseGameId = (value: string): number => {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error("Invalid game id");
+  }
 
-    const gameId = params.gameId;
+  return parsed;
+};
 
-    return (
-        <div>
-            <PageBreadcrumb pageTitle={`Game ${gameId}`}/>
-            <div
-                className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-                <div className="mx-auto w-full max-w-[630px] text-center">
-                    <h3 className="mb-4 font-semibold text-gray-800 text-theme-xl dark:text-white/90 sm:text-2xl">
-                        Card Title Here
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
-                        Start putting content on grids or panels, you can also use different
-                        combinations of grids.Please check out the dashboard and other pages
-                    </p>
-                </div>
+export default async function GamePage({ params }: GamePageProps) {
+  const gameId = parseGameId(params.gameId);
+  const [game, configurations] = await Promise.all([
+    fetchGameById(gameId),
+    fetchGameConfigurations(gameId),
+  ]);
+
+  return (
+    <div>
+      <PageBreadcrumb
+        pageTitle={game.name}
+        breadcrumbs={[
+          { label: "Builder" },
+          { label: "All Builded Games", href: "/builder/games" },
+          { label: game.name },
+        ]}
+      />
+      <div className="space-y-6">
+        <ComponentCard title="Game details">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ID</p>
+              <p className="text-base font-semibold text-gray-800 dark:text-white/90">{game.id}</p>
             </div>
-        </div>
-    );
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Game key</p>
+              <p className="text-base font-semibold text-gray-800 dark:text-white/90">{game.gameKey}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Name</p>
+              <p className="text-base font-semibold text-gray-800 dark:text-white/90">{game.name}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Studio ID</p>
+              <p className="text-base font-semibold text-gray-800 dark:text-white/90">
+                {game.studioId ?? "—"}
+              </p>
+            </div>
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Game configurations"
+          action={
+            <Link
+              href={`/builder/games/${game.id}/configurations/new`}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600"
+            >
+              New Game Configuration
+            </Link>
+          }
+        >
+          <GameConfigurationsTable gameId={game.id} data={configurations} />
+        </ComponentCard>
+      </div>
+    </div>
+  );
 }

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";
+import NewGameForm from "./NewGameForm";
 
 export const metadata: Metadata = {
     title: "FiG | Builder | New game",
@@ -21,7 +22,7 @@ export default async function NewPluginPage() {
             />
             <div className="space-y-6">
                 <ComponentCard title="New game">
-                    <div>Content</div>
+                    <NewGameForm />
                 </ComponentCard>
             </div>
         </div>

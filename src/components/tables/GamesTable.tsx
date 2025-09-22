@@ -1,22 +1,58 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 import ConfigurableTable, { TableConfig } from "@/components/tables/ConfigurableTable";
 import { Game } from "@/lib/games/gameType";
+import { deleteGame } from "@/lib/games/deleteGame";
+import { showToast } from "@/lib/toastStore";
 
 interface GamesTableProps {
   data: Game[];
 }
 
 const GamesTable = ({ data }: GamesTableProps) => {
-  const handleEditGame = useCallback((game: Game) => {
-    console.log(`Edit game ${game.id}`);
-  }, []);
+  const router = useRouter();
 
-  const handleRemoveGame = useCallback((game: Game) => {
-    console.log(`Remove game ${game.id}`);
-  }, []);
+  const handleEditGame = useCallback(
+    (game: Game) => {
+      router.push(`/builder/games/${game.id}/edit`);
+    },
+    [router]
+  );
+
+  const handleRemoveGame = useCallback(
+    async (game: Game) => {
+      const confirmed = window.confirm("If user sure to delete?");
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        await deleteGame(game.id);
+
+        showToast({
+          variant: "success",
+          title: "Game removed",
+          message: `${game.name} has been removed successfully.`,
+          hideButtonLabel: "Dismiss",
+        });
+
+        router.refresh();
+      } catch (error) {
+        console.error(`Failed to remove game ${game.id}`, error);
+      }
+    },
+    [router]
+  );
+
+  const handleNavigateToGame = useCallback(
+    (game: Game) => {
+      router.push(`/builder/games/${game.id}`);
+    },
+    [router]
+  );
 
   const tableConfig = useMemo<TableConfig<Game>>(
     () => ({
@@ -27,21 +63,6 @@ const GamesTable = ({ data }: GamesTableProps) => {
       defaultItemsPerPage: 10,
       itemsPerPageOptions: [5, 10, 20],
       getRowKey: (row) => row.id,
-      expandable: {
-        toggleColumn: {
-          width: "3rem",
-        },
-        renderContent: (row) => (
-          <div className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
-            <p>
-              <span className="font-medium text-gray-700 dark:text-gray-200">Game Key:</span> {row.gameKey}
-            </p>
-            <p>
-              <span className="font-medium text-gray-700 dark:text-gray-200">Studio ID:</span> {row.studioId ?? "N/A"}
-            </p>
-          </div>
-        ),
-      },
       actions: {
         align: "end",
         edit: {
@@ -56,6 +77,7 @@ const GamesTable = ({ data }: GamesTableProps) => {
           },
         },
       },
+      onRowClick: handleNavigateToGame,
       fields: [
         {
           key: "id",
@@ -76,9 +98,15 @@ const GamesTable = ({ data }: GamesTableProps) => {
           dataKey: "name",
           sortable: true,
         },
+        {
+          key: "studioId",
+          label: "Studio ID",
+          dataKey: "studioId",
+          sortable: true,
+        },
       ],
     }),
-    [handleEditGame, handleRemoveGame]
+    [handleEditGame, handleNavigateToGame, handleRemoveGame]
   );
 
   return <ConfigurableTable data={data} config={tableConfig} />;
