@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 };
 
 interface EditGamePageProps {
-  params: {
+  params: Promise<{
     gameId: string;
-  };
+  }>;
 }
 
 const parseGameId = (value: string): number => {
@@ -27,7 +27,8 @@ const parseGameId = (value: string): number => {
 };
 
 export default async function EditGamePage({ params }: EditGamePageProps) {
-  const gameId = parseGameId(params.gameId);
+  const { gameId: gameIdParam } = await params;
+  const gameId = parseGameId(gameIdParam);
   const game = await fetchGameById(gameId);
 
   return (

@@ -9,14 +9,13 @@ export const metadata: Metadata = {
 
 
 interface GamePageProps {
-    params: {
+    params: Promise<{
         gameId: string;
-    };
+    }>;
 }
 
-export default function GamePage({params}: GamePageProps) {
-
-    const gameId = params.gameId;
+export default async function GamePage({ params }: GamePageProps) {
+    const { gameId } = await params;
 
     return (
         <div>
