@@ -46,7 +46,17 @@ export default async function GamePage({ params }: GamePageProps) {
         ]}
       />
       <div className="space-y-6">
-        <ComponentCard title="Game details">
+        <ComponentCard
+          title="Game details"
+          action={
+            <Link
+              href={`/builder/games/${game.id}/edit`}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600"
+            >
+              Edit
+            </Link>
+          }
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ID</p>
