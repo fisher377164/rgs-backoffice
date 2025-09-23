@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Metadata } from "next";
 
 import ComponentCard from "@/components/common/ComponentCard";
@@ -10,7 +11,7 @@ import { GamePlugin } from "@/lib/game-plugins/gamePluginType";
 import { fetchReelSets } from "@/lib/reel-sets/fetchReelSets";
 import { ReelSet } from "@/lib/reel-sets/reelSetType";
 import { fetchSymbols } from "@/lib/symbols/fetchSymbols";
-import { GameSymbol } from "@/lib/symbols/symbolType";
+import SymbolsCard from "./SymbolsCard";
 
 export const metadata: Metadata = {
   title: "FiG | Game configuration details",
@@ -48,47 +49,6 @@ const renderConfigurationValue = (value: string | null | undefined) => {
 const renderEmptyState = (message: string) => (
   <p className="text-sm text-gray-500">{message}</p>
 );
-
-const SymbolsTable = ({ symbols }: { symbols: GameSymbol[] }) => {
-  if (symbols.length === 0) {
-    return renderEmptyState("No symbols available for this configuration.");
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <TableHeader className="bg-gray-50 dark:bg-gray-900/40">
-          <TableRow>
-            <TableCell isHeader className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-              Name
-            </TableCell>
-            <TableCell isHeader className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-              Description
-            </TableCell>
-            <TableCell isHeader className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-              Type
-            </TableCell>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="divide-y divide-gray-200 dark:divide-gray-700">
-          {symbols.map((symbol) => (
-            <TableRow key={symbol.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
-              <TableCell className="px-4 py-2 text-sm font-medium text-gray-800 dark:text-white/90">
-                {symbol.name}
-              </TableCell>
-              <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
-                {symbol.description || "—"}
-              </TableCell>
-              <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
-                {symbol.type}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-};
 
 const ReelSetsTable = ({ reelSets }: { reelSets: ReelSet[] }) => {
   if (reelSets.length === 0) {
@@ -198,7 +158,17 @@ export default async function GameConfigurationDetailsPage({
         ]}
       />
       <div className="space-y-6">
-        <ComponentCard title="Configuration details">
+        <ComponentCard
+          title="Configuration details"
+          action={
+            <Link
+              href={`/builder/games/${game.id}/configurations/${configuration.id}/edit`}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
+            >
+              Edit
+            </Link>
+          }
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -233,9 +203,10 @@ export default async function GameConfigurationDetailsPage({
           </div>
         </ComponentCard>
 
-        <ComponentCard title="Symbols">
-          <SymbolsTable symbols={symbols} />
-        </ComponentCard>
+        <SymbolsCard
+          configurationId={configuration.id}
+          symbols={symbols}
+        />
 
         <ComponentCard title="Reel sets">
           <ReelSetsTable reelSets={reelSets} />
