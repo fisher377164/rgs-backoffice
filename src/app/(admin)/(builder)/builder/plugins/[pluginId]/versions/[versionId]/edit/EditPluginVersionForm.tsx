@@ -157,13 +157,17 @@ const EditPluginVersionForm = ({ pluginId, pluginVersion }: EditPluginVersionFor
                     hint={errors.configuration}
                 />
             </div>
-            <div className="flex justify-end">
+            <div className="flex items-center gap-3">
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : "Save changes"}
+                </Button>
                 <Button
-                    type="submit"
-                    className="min-w-32 justify-center"
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push(`/builder/plugins/${pluginId}`)}
                     disabled={isSubmitting}
                 >
-                    {isSubmitting ? "Saving..." : "Save changes"}
+                    Cancel
                 </Button>
             </div>
         </form>

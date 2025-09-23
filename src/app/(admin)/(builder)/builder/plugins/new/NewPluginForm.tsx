@@ -225,13 +225,17 @@ const NewPluginForm = () => {
                     rows={4}
                 />
             </div>
-            <div className="flex justify-end">
+            <div className="flex items-center gap-3">
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Creating..." : "Create plugin"}
+                </Button>
                 <Button
-                    type="submit"
-                    className="min-w-32 justify-center"
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/builder/plugins")}
                     disabled={isSubmitting}
                 >
-                    {isSubmitting ? "Creating..." : "Create plugin"}
+                    Cancel
                 </Button>
             </div>
         </form>
