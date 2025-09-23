@@ -3,14 +3,13 @@ import { Metadata } from "next";
 
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { fetchGameConfiguration } from "@/lib/game-configurations/fetchGameConfiguration";
 import { fetchGameById } from "@/lib/games/fetchGameById";
 import { fetchGamePlugins } from "@/lib/game-plugins/fetchGamePlugins";
-import { GamePlugin } from "@/lib/game-plugins/gamePluginType";
 import { fetchReelSets } from "@/lib/reel-sets/fetchReelSets";
-import { ReelSet } from "@/lib/reel-sets/reelSetType";
 import { fetchSymbols } from "@/lib/symbols/fetchSymbols";
+import PluginsCard from "./PluginsCard";
+import ReelSetsCard from "./ReelSetsCard";
 import SymbolsCard from "./SymbolsCard";
 
 export const metadata: Metadata = {
@@ -43,86 +42,6 @@ const renderConfigurationValue = (value: string | null | undefined) => {
     <pre className="whitespace-pre-wrap break-words rounded-lg bg-gray-50 p-4 text-sm text-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
       {value}
     </pre>
-  );
-};
-
-const renderEmptyState = (message: string) => (
-  <p className="text-sm text-gray-500">{message}</p>
-);
-
-const ReelSetsTable = ({ reelSets }: { reelSets: ReelSet[] }) => {
-  if (reelSets.length === 0) {
-    return renderEmptyState("No reel sets available for this configuration.");
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <TableHeader className="bg-gray-50 dark:bg-gray-900/40">
-          <TableRow>
-            <TableCell isHeader className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-              ID
-            </TableCell>
-            <TableCell isHeader className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-              Reel set key
-            </TableCell>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="divide-y divide-gray-200 dark:divide-gray-700">
-          {reelSets.map((reelSet) => (
-            <TableRow key={reelSet.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
-              <TableCell className="px-4 py-2 text-sm font-medium text-gray-800 dark:text-white/90">
-                {reelSet.id}
-              </TableCell>
-              <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
-                {reelSet.reelSetKey}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-};
-
-const GamePluginsTable = ({ plugins }: { plugins: GamePlugin[] }) => {
-  if (plugins.length === 0) {
-    return renderEmptyState("No plugins associated with this configuration.");
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <TableHeader className="bg-gray-50 dark:bg-gray-900/40">
-          <TableRow>
-            <TableCell isHeader className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-              Plugin ID
-            </TableCell>
-            <TableCell isHeader className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-              Description
-            </TableCell>
-            <TableCell isHeader className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-              Configuration
-            </TableCell>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="divide-y divide-gray-200 dark:divide-gray-700">
-          {plugins.map((plugin) => (
-            <TableRow key={plugin.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
-              <TableCell className="px-4 py-2 text-sm font-medium text-gray-800 dark:text-white/90">
-                {plugin.pluginId}
-              </TableCell>
-              <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
-                {plugin.description || "—"}
-              </TableCell>
-              <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
-                {plugin.configuration || "—"}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
   );
 };
 
@@ -208,13 +127,9 @@ export default async function GameConfigurationDetailsPage({
           symbols={symbols}
         />
 
-        <ComponentCard title="Reel sets">
-          <ReelSetsTable reelSets={reelSets} />
-        </ComponentCard>
+        <ReelSetsCard configurationId={configuration.id} reelSets={reelSets} />
 
-        <ComponentCard title="Plugins">
-          <GamePluginsTable plugins={plugins} />
-        </ComponentCard>
+        <PluginsCard configurationId={configuration.id} plugins={plugins} />
       </div>
     </div>
   );

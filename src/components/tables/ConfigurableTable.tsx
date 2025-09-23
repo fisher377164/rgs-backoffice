@@ -546,7 +546,7 @@ const ConfigurableTable = <T extends object>({
                           >
                             {actionsConfig?.edit && (
                               <Button
-                                size="sm"
+                                size="xs"
                                 variant={actionsConfig.edit.buttonProps?.variant ?? "outline"}
                                 className={actionsConfig.edit.buttonProps?.className}
                                 onClick={(event) => {
@@ -559,7 +559,7 @@ const ConfigurableTable = <T extends object>({
                             )}
                             {actionsConfig?.remove && (
                               <Button
-                                size="sm"
+                                size="xs"
                                 variant={actionsConfig.remove.buttonProps?.variant ?? "outline"}
                                 className={
                                   actionsConfig.remove.buttonProps?.className ?? "text-red-500"
