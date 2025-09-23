@@ -68,12 +68,11 @@ export default async function GameConfigurationDetailsPage({
   return (
     <div>
       <PageBreadcrumb
-        pageTitle={`Configuration: ${configuration.name}`}
+        pageTitle={configuration.name}
         breadcrumbs={[
           { label: "Builder" },
           { label: "All Builded Games", href: "/builder/games" },
           { label: game.name, href: `/builder/games/${game.id}` },
-          { label: configuration.name },
         ]}
       />
       <div className="space-y-6">

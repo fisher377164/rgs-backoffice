@@ -48,12 +48,12 @@ export default async function EditGameConfigurationPage({
   return (
     <div>
       <PageBreadcrumb
-        pageTitle={`Edit configuration: ${configuration.name}`}
+        pageTitle={`Edit`}
         breadcrumbs={[
           { label: "Builder" },
           { label: "All Builded Games", href: "/builder/games" },
           { label: game.name, href: `/builder/games/${game.id}` },
-          { label: "Edit Configuration" },
+          { label: configuration.name, href: `/builder/games/${game.id}/configurations/${configurationId}` },
         ]}
       />
       <div className="space-y-6">
