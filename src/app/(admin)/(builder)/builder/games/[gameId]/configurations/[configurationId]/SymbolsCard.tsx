@@ -5,6 +5,7 @@ import {
   Dispatch,
   FormEvent,
   SetStateAction,
+  useCallback,
   useMemo,
   useState,
 } from "react";
@@ -14,14 +15,10 @@ import ComponentCard from "@/components/common/ComponentCard";
 import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
+import ConfigurableTable, {
+  TableConfig,
+} from "@/components/tables/ConfigurableTable";
 import Button from "@/components/ui/button/Button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { createSymbol } from "@/lib/symbols/createSymbol";
 import { deleteSymbol } from "@/lib/symbols/deleteSymbol";
 import { GameSymbol, SYMBOL_TYPES, SymbolType } from "@/lib/symbols/symbolType";
@@ -218,42 +215,92 @@ const SymbolsCard = ({ configurationId, symbols }: SymbolsCardProps) => {
     setCreateErrors({});
   };
 
-  const handleEditSymbol = (symbol: GameSymbol) => {
+  const handleEditSymbol = useCallback((symbol: GameSymbol) => {
     setEditingSymbol(symbol);
     setEditErrors({});
     setIsCreateOpen(false);
-  };
+  }, []);
 
   const handleCancelEdit = () => {
     setEditingSymbol(null);
     setEditErrors({});
   };
 
-  const handleDeleteSymbol = async (symbol: GameSymbol) => {
-    const confirmed = window.confirm("If user sure to delete?");
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      await deleteSymbol(symbol.id);
-
-      showToast({
-        variant: "success",
-        title: "Symbol deleted",
-        message: `${symbol.name} has been removed successfully.`,
-        hideButtonLabel: "Dismiss",
-      });
-
-      if (editingSymbol?.id === symbol.id) {
-        setEditingSymbol(null);
+  const handleDeleteSymbol = useCallback(
+    async (symbol: GameSymbol) => {
+      const confirmed = window.confirm("If user sure to delete?");
+      if (!confirmed) {
+        return;
       }
 
-      router.refresh();
-    } catch (error) {
-      console.error(`Failed to delete symbol ${symbol.id}`, error);
-    }
-  };
+      try {
+        await deleteSymbol(symbol.id);
+
+        showToast({
+          variant: "success",
+          title: "Symbol deleted",
+          message: `${symbol.name} has been removed successfully.`,
+          hideButtonLabel: "Dismiss",
+        });
+
+        if (editingSymbol?.id === symbol.id) {
+          setEditingSymbol(null);
+        }
+
+        router.refresh();
+      } catch (error) {
+        console.error(`Failed to delete symbol ${symbol.id}`, error);
+      }
+    },
+    [editingSymbol, router]
+  );
+
+  const tableConfig = useMemo<TableConfig<GameSymbol>>(
+    () => ({
+      enablePagination: false,
+      enableSearch: false,
+      enableSorting: false,
+      getRowKey: (row) => row.id,
+      fields: [
+        {
+          key: "id",
+          label: "ID",
+          dataKey: "id",
+        },
+        {
+          key: "name",
+          label: "Name",
+          dataKey: "name",
+        },
+        {
+          key: "description",
+          label: "Description",
+          render: (row) =>
+            row.description && row.description.length > 0 ? row.description : "—",
+        },
+        {
+          key: "type",
+          label: "Type",
+          dataKey: "type",
+        },
+      ],
+      actions: {
+        align: "end",
+        edit: {
+          label: "Edit",
+          onClick: handleEditSymbol,
+        },
+        remove: {
+          label: "Delete",
+          onClick: handleDeleteSymbol,
+          buttonProps: {
+            className: "text-error-600",
+          },
+        },
+      },
+    }),
+    [handleDeleteSymbol, handleEditSymbol]
+  );
 
   return (
     <ComponentCard
@@ -420,89 +467,7 @@ const SymbolsCard = ({ configurationId, symbols }: SymbolsCardProps) => {
           </form>
         )}
 
-        <div className="overflow-x-auto">
-          {symbols.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              No symbols available for this configuration.
-            </p>
-          ) : (
-            <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <TableHeader className="bg-gray-50 dark:bg-gray-900/40">
-                <TableRow>
-                  <TableCell
-                    isHeader
-                    className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300"
-                  >
-                    ID
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300"
-                  >
-                    Name
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300"
-                  >
-                    Description
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300"
-                  >
-                    Type
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300"
-                  >
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {symbols.map((symbol) => (
-                  <TableRow key={symbol.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
-                    <TableCell className="px-4 py-2 text-sm font-medium text-gray-800 dark:text-white/90">
-                      {symbol.id}
-                    </TableCell>
-                    <TableCell className="px-4 py-2 text-sm font-medium text-gray-800 dark:text-white/90">
-                      {symbol.name}
-                    </TableCell>
-                    <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
-                      {symbol.description?.length ? symbol.description : "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
-                      {symbol.type}
-                    </TableCell>
-                    <TableCell className="px-4 py-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditSymbol(symbol)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="text-error-600"
-                          onClick={() => handleDeleteSymbol(symbol)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+        <ConfigurableTable data={symbols} config={tableConfig} />
       </div>
     </ComponentCard>
   );
