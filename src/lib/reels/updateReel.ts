@@ -2,6 +2,7 @@ import { fetchData } from "@/lib/apiClient";
 import { Reel } from "@/lib/reels/reelType";
 
 export interface UpdateReelPayload {
+  index: number;
   symbolIds: number[];
 }
 
