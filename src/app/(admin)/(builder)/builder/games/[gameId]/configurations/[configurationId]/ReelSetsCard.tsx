@@ -80,9 +80,10 @@ interface ReelFormProps {
   state: ReelFormState;
   onCancel: () => void;
   onSuccess: (options?: ReelFormSuccessOptions) => Promise<void> | void;
+  getNextReelIndex?: () => number;
 }
 
-const ReelForm = ({ state, onCancel, onSuccess }: ReelFormProps) => {
+const ReelForm = ({ state, onCancel, onSuccess, getNextReelIndex }: ReelFormProps) => {
   const { mode, reelSet, reel } = state;
   const [value, setValue] = useState(() => reel?.symbolIds.join(", ") ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -138,8 +139,15 @@ const ReelForm = ({ state, onCancel, onSuccess }: ReelFormProps) => {
 
     try {
       if (mode === "create") {
+        const computedIndex = getNextReelIndex?.();
+        const nextIndex =
+          typeof computedIndex === "number" && Number.isFinite(computedIndex)
+            ? Math.max(0, Math.floor(computedIndex))
+            : 0;
+
         await createReel({
           reelSetId: reelSet.id,
+          index: nextIndex,
           symbolIds: parsedSymbolIds,
         });
 
@@ -173,7 +181,7 @@ const ReelForm = ({ state, onCancel, onSuccess }: ReelFormProps) => {
     }
   };
 
-  const submitLabel = mode === "create" ? "Add reel" : "Save";
+  const submitLabel = mode === "create" ? "Create reel" : "Save";
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit} noValidate>
@@ -720,6 +728,25 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
     []
   );
 
+  const getNextReelIndex = useCallback(
+    (reelSetId: number) => {
+      const state = reelStates[reelSetId];
+
+      if (!state) {
+        return 0;
+      }
+
+      const content = state.content ?? [];
+      const maxIndexFromContent =
+        content.length > 0 ? Math.max(...content.map((item) => item.index)) : -1;
+      const maxIndexFromTotal = state.totalElements > 0 ? state.totalElements - 1 : -1;
+      const maxIndex = Math.max(maxIndexFromContent, maxIndexFromTotal);
+
+      return maxIndex + 1;
+    },
+    [reelStates]
+  );
+
   const handleSaveReelPositions = useCallback(
     async (reelSet: ReelSet) => {
       const state = reelStates[reelSet.id];
@@ -814,6 +841,8 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
     const hasOrderChanges = Boolean(state?.isDirty);
     const isSavingPositions = Boolean(state?.isSavingPositions);
     const isReorderDisabled = Boolean(state?.isLoading || state?.isSavingPositions);
+    const isCreateFormActive =
+      activeReelForm?.mode === "create" && activeReelForm.reelSet.id === reelSet.id;
 
     return (
       <ComponentCard
@@ -896,24 +925,27 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
                 state={activeReelForm}
                 onCancel={() => setActiveReelForm(null)}
                 onSuccess={(options) => handleReelFormSuccess(reelSet.id, options)}
+                getNextReelIndex={() => getNextReelIndex(reelSet.id)}
               />
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Button type="button" size="sm" onClick={() => handleAddReel(reelSet)}>
-                  Add reel
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleSaveReelPositions(reelSet)}
-                  disabled={!hasOrderChanges || isSavingPositions || reels.length === 0}
-                >
-                  {isSavingPositions ? "Saving..." : "Save positions"}
-                </Button>
-              </div>
+              {!isCreateFormActive && (
+                <div className="flex items-center gap-2">
+                  <Button type="button" size="sm" onClick={() => handleAddReel(reelSet)}>
+                    New reel
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleSaveReelPositions(reelSet)}
+                    disabled={!hasOrderChanges || isSavingPositions || reels.length === 0}
+                  >
+                    {isSavingPositions ? "Saving..." : "Save positions"}
+                  </Button>
+                </div>
+              )}
               <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                 <span>
                   Page {Math.min(currentPage, totalPages)} of {totalPages}
@@ -963,9 +995,11 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
             ) : reels.length === 0 ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
                 <span>No reels yet.</span>
-                <Button type="button" size="sm" onClick={() => handleAddReel(reelSet)}>
-                  Add reel
-                </Button>
+                {!isCreateFormActive && (
+                  <Button type="button" size="sm" onClick={() => handleAddReel(reelSet)}>
+                    New reel
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="relative">
@@ -980,6 +1014,12 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
                         className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
                       >
                         #
+                      </TableCell>
+                      <TableCell
+                        isHeader
+                        className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                      >
+                        ID
                       </TableCell>
                       <TableCell
                         isHeader
@@ -1013,6 +1053,9 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
                         >
                           <TableCell className="px-3 py-3 font-medium text-gray-700 dark:text-white/80">
                             {displayIndex}
+                          </TableCell>
+                          <TableCell className="px-3 py-3 text-gray-600 dark:text-gray-300">
+                            {reel.id}
                           </TableCell>
                           <TableCell className="px-3 py-3 text-gray-600 dark:text-gray-300">
                             {reel.symbolIds.length}
