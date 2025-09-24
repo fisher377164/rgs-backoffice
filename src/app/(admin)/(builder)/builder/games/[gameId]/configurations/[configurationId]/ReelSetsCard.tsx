@@ -848,13 +848,10 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
       <ComponentCard
         key={reelSet.id}
         title={
-          <span className="flex flex-wrap items-center gap-3">
+          <span className="flex items-center gap-3">
             <span>{reelSet.reelSetKey}</span>
             <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
               ID: {reelSet.id}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              Expand to manage reels for this set.
             </span>
           </span>
         }
@@ -1113,7 +1110,11 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
               </div>
             )}
           </div>
-        ) : null}
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Expand to manage reels for this set.
+          </p>
+        )}
       </ComponentCard>
     );
   };
