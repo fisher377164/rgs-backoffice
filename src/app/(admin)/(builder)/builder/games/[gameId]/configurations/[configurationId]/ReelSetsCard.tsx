@@ -57,14 +57,15 @@ interface ReelFormSuccessOptions {
 }
 
 const DEFAULT_REELS_PAGE_SIZE = 10;
+const TRIM_SYMBOLS_SIZE = 40;
 
 const formatSymbolPreview = (symbolIds: number[]) => {
   if (!symbolIds.length) {
     return "—";
   }
 
-  const preview = symbolIds.slice(0, 20).join(", ");
-  return symbolIds.length > 20 ? `${preview}…` : preview;
+  const preview = symbolIds.slice(0, TRIM_SYMBOLS_SIZE).join(", ");
+  return symbolIds.length > TRIM_SYMBOLS_SIZE ? `${preview}…` : preview;
 };
 
 const computeTotalPages = (state?: ReelListState) => {
