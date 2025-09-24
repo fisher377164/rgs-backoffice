@@ -3,6 +3,7 @@ import { Reel } from "@/lib/reels/reelType";
 
 export interface CreateReelPayload {
   reelSetId: number;
+  index: number;
   symbolIds: number[];
 }
 
