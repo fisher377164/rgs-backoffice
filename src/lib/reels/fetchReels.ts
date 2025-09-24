@@ -2,7 +2,9 @@ import { fetchData } from "@/lib/apiClient";
 import { Reel, ReelsResponse } from "@/lib/reels/reelType";
 
 const normalizeReels = (response: ReelsResponse): Reel[] => {
-  return response.content ?? [];
+  return (response.content ?? [])
+    .filter((reel): reel is Reel => reel != null)
+    .sort((a, b) => a.index - b.index);
 };
 
 interface FetchReelsParams {

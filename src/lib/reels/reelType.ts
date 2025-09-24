@@ -1,6 +1,7 @@
 export interface Reel {
   id: number;
   reelSetId: number;
+  index: number;
   symbolIds: number[];
 }
 

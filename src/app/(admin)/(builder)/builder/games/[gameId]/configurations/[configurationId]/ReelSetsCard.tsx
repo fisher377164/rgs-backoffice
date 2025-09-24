@@ -41,6 +41,8 @@ interface ReelListState {
   size: number;
   isLoading: boolean;
   hasLoaded: boolean;
+  isDirty: boolean;
+  isSavingPositions: boolean;
   error?: string;
 }
 
@@ -150,7 +152,10 @@ const ReelForm = ({ state, onCancel, onSuccess }: ReelFormProps) => {
 
         await onSuccess({ refreshToFirstPage: true });
       } else if (reel) {
-        await updateReel(reel.id, { symbolIds: parsedSymbolIds });
+        await updateReel(reel.id, {
+          index: reel.index,
+          symbolIds: parsedSymbolIds,
+        });
 
         showToast({
           variant: "success",
@@ -302,6 +307,8 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
           size: pageSize,
           isLoading: true,
           hasLoaded: existingState?.hasLoaded ?? false,
+          isDirty: existingState?.isDirty ?? false,
+          isSavingPositions: existingState?.isSavingPositions ?? false,
           error: undefined,
         },
       }));
@@ -322,6 +329,8 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
             size: response.size,
             isLoading: false,
             hasLoaded: true,
+            isDirty: false,
+            isSavingPositions: false,
             error: undefined,
           },
         }));
@@ -344,6 +353,8 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
             size: pageSize,
             isLoading: false,
             hasLoaded: existingState?.hasLoaded ?? false,
+            isDirty: existingState?.isDirty ?? false,
+            isSavingPositions: existingState?.isSavingPositions ?? false,
             error: "Unable to load reels. Please try again.",
           },
         }));
@@ -653,6 +664,141 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
     [loadReels, reelStates]
   );
 
+  const handleMoveReel = useCallback(
+    (reelSetId: number, reelId: number, direction: "up" | "down") => {
+      let updatedReel: Reel | undefined;
+
+      setReelStates((previous) => {
+        const state = previous[reelSetId];
+        if (!state || state.isSavingPositions) {
+          return previous;
+        }
+
+        const currentIndex = state.content.findIndex((item) => item.id === reelId);
+        if (currentIndex === -1) {
+          return previous;
+        }
+
+        const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+        if (targetIndex < 0 || targetIndex >= state.content.length) {
+          return previous;
+        }
+
+        const nextContent = [...state.content];
+        const [moved] = nextContent.splice(currentIndex, 1);
+        nextContent.splice(targetIndex, 0, moved);
+
+        const indexOffset = state.page * state.size;
+        const contentWithIndexes = nextContent.map((item, position) => {
+          const nextReel = { ...item, index: indexOffset + position };
+          if (item.id === reelId) {
+            updatedReel = nextReel;
+          }
+          return nextReel;
+        });
+
+        return {
+          ...previous,
+          [reelSetId]: {
+            ...state,
+            content: contentWithIndexes,
+            isDirty: true,
+          },
+        };
+      });
+
+      if (updatedReel) {
+        setActiveReelForm((previous) => {
+          if (!previous || previous.reel?.id !== reelId) {
+            return previous;
+          }
+
+          return { ...previous, reel: updatedReel };
+        });
+      }
+    },
+    []
+  );
+
+  const handleSaveReelPositions = useCallback(
+    async (reelSet: ReelSet) => {
+      const state = reelStates[reelSet.id];
+
+      if (!state || !state.isDirty || state.isSavingPositions) {
+        return;
+      }
+
+      setReelStates((previous) => ({
+        ...previous,
+        [reelSet.id]: {
+          ...state,
+          isSavingPositions: true,
+        },
+      }));
+
+      try {
+        await Promise.all(
+          state.content.map((reel) =>
+            updateReel(reel.id, {
+              index: reel.index,
+              symbolIds: reel.symbolIds,
+            })
+          )
+        );
+
+        showToast({
+          variant: "success",
+          title: "Reel positions saved",
+          message: `Indexes for ${reelSet.reelSetKey} have been updated.`,
+          hideButtonLabel: "Dismiss",
+        });
+
+        setReelStates((previous) => {
+          const nextState = previous[reelSet.id];
+          if (!nextState) {
+            return previous;
+          }
+
+          return {
+            ...previous,
+            [reelSet.id]: {
+              ...nextState,
+              isDirty: false,
+              isSavingPositions: false,
+            },
+          };
+        });
+
+        await loadReels(reelSet.id, state.page);
+      } catch (error) {
+        console.error(`Failed to save reel positions for set ${reelSet.id}`, error);
+
+        showToast({
+          variant: "error",
+          title: "Failed to save positions",
+          message: "Unable to update reel positions. Please try again.",
+          hideButtonLabel: "Dismiss",
+        });
+
+        setReelStates((previous) => {
+          const nextState = previous[reelSet.id];
+          if (!nextState) {
+            return previous;
+          }
+
+          return {
+            ...previous,
+            [reelSet.id]: {
+              ...nextState,
+              isSavingPositions: false,
+            },
+          };
+        });
+      }
+    },
+    [loadReels, reelStates]
+  );
+
   const renderReelSetCard = (reelSet: ReelSet) => {
     const isExpanded = expandedReelSets.has(reelSet.id);
     const state = reelStates[reelSet.id];
@@ -665,7 +811,9 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
       : false;
     const showInitialSkeleton = Boolean(state?.isLoading && !state.hasLoaded);
     const showLoadingOverlay = Boolean(state?.isLoading && state.hasLoaded);
-    const displayIndexBase = (state?.page ?? 0) * (state?.size ?? DEFAULT_REELS_PAGE_SIZE);
+    const hasOrderChanges = Boolean(state?.isDirty);
+    const isSavingPositions = Boolean(state?.isSavingPositions);
+    const isReorderDisabled = Boolean(state?.isLoading || state?.isSavingPositions);
 
     return (
       <ComponentCard
@@ -752,9 +900,20 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <Button type="button" size="sm" onClick={() => handleAddReel(reelSet)}>
-                Add reel
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button type="button" size="sm" onClick={() => handleAddReel(reelSet)}>
+                  Add reel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleSaveReelPositions(reelSet)}
+                  disabled={!hasOrderChanges || isSavingPositions || reels.length === 0}
+                >
+                  {isSavingPositions ? "Saving..." : "Save positions"}
+                </Button>
+              </div>
               <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                 <span>
                   Page {Math.min(currentPage, totalPages)} of {totalPages}
@@ -765,7 +924,7 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
                     size="xs"
                     variant="outline"
                     onClick={() => handleReelsPageChange(reelSet.id, "prev")}
-                    disabled={!canGoPrev}
+                    disabled={!canGoPrev || isSavingPositions || hasOrderChanges}
                   >
                     Prev
                   </Button>
@@ -774,7 +933,7 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
                     size="xs"
                     variant="outline"
                     onClick={() => handleReelsPageChange(reelSet.id, "next")}
-                    disabled={!canGoNext}
+                    disabled={!canGoNext || isSavingPositions || hasOrderChanges}
                   >
                     Next
                   </Button>
@@ -844,7 +1003,9 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
                   </TableHeader>
                   <TableBody className="divide-y divide-gray-200 dark:divide-gray-800">
                     {reels.map((reel, index) => {
-                      const displayIndex = displayIndexBase + index + 1;
+                      const displayIndex = reel.index + 1;
+                      const canMoveUp = index > 0;
+                      const canMoveDown = index < reels.length - 1;
                       return (
                         <TableRow
                           key={reel.id}
@@ -860,7 +1021,25 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
                             {formatSymbolPreview(reel.symbolIds)}
                           </TableCell>
                           <TableCell className="px-3 py-3">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
+                              <Button
+                                type="button"
+                                size="xs"
+                                variant="outline"
+                                onClick={() => handleMoveReel(reelSet.id, reel.id, "up")}
+                                disabled={!canMoveUp || isReorderDisabled}
+                              >
+                                Move up
+                              </Button>
+                              <Button
+                                type="button"
+                                size="xs"
+                                variant="outline"
+                                onClick={() => handleMoveReel(reelSet.id, reel.id, "down")}
+                                disabled={!canMoveDown || isReorderDisabled}
+                              >
+                                Move down
+                              </Button>
                               <Button
                                 type="button"
                                 size="xs"
