@@ -1,7 +1,15 @@
 
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -12,7 +20,7 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
-import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
+import DropdownItem from "@/components/ui/dropdown/DropdownItem";
 import { Modal } from "@/components/ui/modal";
 import { ReelSet } from "@/lib/reel-sets/reelSetType";
 import { createReelSet } from "@/lib/reel-sets/createReelSet";
@@ -105,6 +113,8 @@ const parseSymbolsInput = (value: string) => {
 
 const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
   const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [reelSetsState, setReelSetsState] = useState<ReelSet[]>(() =>
     [...reelSets].sort((a, b) => a.reelSetKey.localeCompare(b.reelSetKey))
   );
@@ -187,6 +197,15 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
       active = false;
     };
   }, [reelSets]);
+
+  const filteredReelSets = useMemo(() => {
+    if (!query.trim()) {
+      return reelSetsState;
+    }
+
+    const normalized = query.trim().toLowerCase();
+    return reelSetsState.filter((set) => set.reelSetKey.toLowerCase().includes(normalized));
+  }, [query, reelSetsState]);
 
   const handleOpenCreateDialog = () => {
     setDialogState({ mode: "create", isOpen: true });
@@ -342,6 +361,10 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
       }
       return next;
     });
+  };
+
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setQuery(event.target.value);
   };
 
   const handleOpenCreateReel = (reelSetId: number) => {
@@ -590,6 +613,104 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
     });
   };
 
+  const handleExport = async () => {
+    const exportPayload = reelSetsState.map((set) => ({
+      ...set,
+      reels: reelCache[set.id]?.reels ?? [],
+    }));
+
+    const json = JSON.stringify(exportPayload, null, 2);
+
+    try {
+      await navigator.clipboard.writeText(json);
+      showToast({
+        variant: "success",
+        title: "Copied",
+        message: "Reel sets exported to clipboard.",
+        hideButtonLabel: "Dismiss",
+      });
+    } catch (error) {
+      console.error("Failed to copy to clipboard", error);
+    }
+  };
+
+  const handleImport = () => {
+    const input = window.prompt("Paste reel sets JSON");
+    if (!input) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(input);
+      if (!Array.isArray(parsed)) {
+        throw new Error("Invalid payload");
+      }
+
+      (async () => {
+        for (const item of parsed) {
+          if (!item || typeof item !== "object") {
+            continue;
+          }
+
+          const reelSetKey = typeof item.reelSetKey === "string" ? item.reelSetKey : undefined;
+          if (!reelSetKey) {
+            continue;
+          }
+
+          const created = await createReelSet({
+            gameConfigurationId: configurationId,
+            reelSetKey,
+          });
+
+          upsertReelSetState(created);
+
+          const reels: Reel[] = Array.isArray(item.reels)
+            ? item.reels
+                .filter((reel: unknown): reel is Reel =>
+                  Boolean(
+                    reel &&
+                      typeof reel === "object" &&
+                      typeof (reel as Reel).index === "number" &&
+                      Array.isArray((reel as Reel).symbolIds)
+                  )
+                )
+                .sort((a, b) => a.index - b.index)
+            : [];
+
+          const createdReels: Reel[] = [];
+          for (const [index, reel] of reels.entries()) {
+            const result = await createReel({
+              reelSetId: created.id,
+              index: index + 1,
+              symbolIds: reel.symbolIds,
+            });
+            createdReels.push(result);
+          }
+
+          setReelCache((previous) => ({
+            ...previous,
+            [created.id]: {
+              status: "ready",
+              reels: createdReels,
+            },
+          }));
+        }
+
+        showToast({
+          variant: "success",
+          title: "Import completed",
+          message: "Reel sets imported successfully.",
+          hideButtonLabel: "Dismiss",
+        });
+        router.refresh();
+      })().catch((error) => {
+        console.error("Failed to import reel sets", error);
+      });
+    } catch (error) {
+      console.error("Invalid JSON payload", error);
+    }
+  };
+
   const handleReorderStart = (reelSetId: number) => {
     if (reorderSnapshots.current.has(reelSetId)) {
       return;
@@ -714,7 +835,26 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
     <ComponentCard
       title="Reel sets"
       action={
-        <div className="flex justify-end">
+        <div className="flex flex-col items-stretch justify-end gap-2 sm:flex-row sm:items-center">
+          <div className="relative w-full sm:w-64">
+            <input
+              type="search"
+              value={query}
+              onChange={handleSearchChange}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              placeholder="Search by key"
+              className="h-11 w-full rounded-lg border border-gray-700/60 bg-gray-900/60 px-4 text-sm text-gray-200 placeholder:text-gray-500 focus:border-brand-400 focus:outline-hidden focus:ring-2 focus:ring-brand-400/40"
+            />
+            <div
+              className={`pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm ${
+                isSearchFocused ? "text-brand-400" : "text-gray-500"
+              }`}
+            >
+              ⌘K
+            </div>
+          </div>
+          <ImportExportMenu onImport={handleImport} onExport={handleExport} />
           <Button type="button" size="sm" onClick={handleOpenCreateDialog}>
             New reel set
           </Button>
@@ -722,12 +862,12 @@ const ReelSetsCard = ({ configurationId, reelSets }: ReelSetsCardProps) => {
       }
     >
       <div className="space-y-4">
-        {reelSetsState.length === 0 ? (
+        {filteredReelSets.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-700/60 bg-gray-900/40 p-10 text-center">
-            <p className="text-sm text-gray-400">No reel sets available. Create a new set to get started.</p>
+            <p className="text-sm text-gray-400">No reel sets found. Try adjusting your search or create a new set.</p>
           </div>
         ) : (
-          reelSetsState.map((reelSet) => {
+          filteredReelSets.map((reelSet) => {
             const cacheEntry = reelCache[reelSet.id];
             const isExpanded = expanded.has(reelSet.id);
             const reelCount = cacheEntry?.reels.length ?? 0;
@@ -1324,6 +1464,48 @@ const SortableReelRow = ({
         </div>
       </td>
     </tr>
+  );
+};
+
+interface ImportExportMenuProps {
+  onImport: () => void;
+  onExport: () => void;
+}
+
+const ImportExportMenu = ({ onImport, onExport }: ImportExportMenuProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="dropdown-toggle inline-flex items-center gap-2 rounded-lg border border-gray-800 px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-gray-900"
+        onClick={() => setIsOpen((previous) => !previous)}
+      >
+        Import/Export
+        <span className="text-gray-500">▾</span>
+      </button>
+      <Dropdown isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <div className="w-48 py-2">
+          <DropdownItem
+            onClick={() => {
+              setIsOpen(false);
+              onImport();
+            }}
+          >
+            Import JSON
+          </DropdownItem>
+          <DropdownItem
+            onClick={() => {
+              setIsOpen(false);
+              onExport();
+            }}
+          >
+            Copy JSON
+          </DropdownItem>
+        </div>
+      </Dropdown>
+    </div>
   );
 };
 
