@@ -11,6 +11,7 @@ import { fetchSymbols } from "@/lib/symbols/fetchSymbols";
 import PluginsCard from "./PluginsCard";
 import ReelSetsCard from "./ReelSetsCard";
 import SymbolsCard from "./SymbolsCard";
+import TriggerGameBuildButton from "./TriggerGameBuildButton";
 
 export const metadata: Metadata = {
   title: "FiG | Game configuration details",
@@ -79,12 +80,18 @@ export default async function GameConfigurationDetailsPage({
         <ComponentCard
           title="Configuration details"
           action={
-            <Link
-              href={`/builder/games/${game.id}/configurations/${configuration.id}/edit`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
-            >
-              Edit
-            </Link>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <TriggerGameBuildButton
+                configurationId={configuration.id}
+                configurationName={configuration.name}
+              />
+              <Link
+                href={`/builder/games/${game.id}/configurations/${configuration.id}/edit`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
+              >
+                Edit
+              </Link>
+            </div>
           }
         >
           <div className="grid gap-4 sm:grid-cols-2">
