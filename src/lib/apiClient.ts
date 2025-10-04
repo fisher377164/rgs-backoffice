@@ -128,8 +128,15 @@ export const fetchData = async <TResponse>(
     return undefined as TResponse;
   }
 
+  const responseText = await response.text();
+  const trimmedResponseText = responseText.trim();
+
+  if (!trimmedResponseText) {
+    return undefined as TResponse;
+  }
+
   try {
-    return (await response.json()) as TResponse;
+    return JSON.parse(trimmedResponseText) as TResponse;
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     const errorMessage = `Failed to parse JSON response from ${url}: ${reason}`;
