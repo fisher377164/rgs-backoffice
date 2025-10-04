@@ -93,7 +93,7 @@ const EditGameConfigurationForm = ({
         hideButtonLabel: "Dismiss",
       });
 
-      router.push(`/builder/games/${configuration.gameId}`);
+      router.push(`/builder/games/${configuration.gameId}/configurations/${configuration.id}`);
       router.refresh();
     } catch (error) {
       console.error(
@@ -142,7 +142,7 @@ const EditGameConfigurationForm = ({
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(`/builder/games/${configuration.gameId}`)}
+          onClick={() => router.push(`/builder/games/${configuration.gameId}/configurations/${configuration.id}`)}
           disabled={isSubmitting}
         >
           Cancel
