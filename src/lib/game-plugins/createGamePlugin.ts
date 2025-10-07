@@ -3,7 +3,7 @@ import { GamePlugin } from "@/lib/game-plugins/gamePluginType";
 
 export interface CreateGamePluginPayload {
   gameConfigurationId: number;
-  pluginId: number;
+  pluginVersionId: number;
   description?: string;
   configuration?: string;
 }

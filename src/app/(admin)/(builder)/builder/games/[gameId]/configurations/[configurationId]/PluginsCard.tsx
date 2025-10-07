@@ -22,7 +22,7 @@ interface PluginsCardProps {
   plugins: GamePlugin[];
 }
 
-type CreateFormErrors = Partial<Record<"pluginId", string>>;
+type CreateFormErrors = Partial<Record<"pluginVersionId", string>>;
 
 type EditFormState = {
   description: string;
@@ -53,8 +53,8 @@ const PluginsCard = ({ configurationId, plugins }: PluginsCardProps) => {
     setCreateErrors({});
   };
 
-  const handleCreatePluginIdChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (createErrors.pluginId && event.target.value.trim().length > 0) {
+  const handleCreatePluginVersionIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (createErrors.pluginVersionId && event.target.value.trim().length > 0) {
       setCreateErrors({});
     }
   };
@@ -69,14 +69,18 @@ const PluginsCard = ({ configurationId, plugins }: PluginsCardProps) => {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    const pluginIdRaw = String(formData.get("pluginId") ?? "").trim();
+    const pluginVersionIdRaw = String(formData.get("pluginVersionId") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim();
     const configurationValue = String(formData.get("configuration") ?? "").trim();
 
-    const pluginId = Number(pluginIdRaw);
+    const pluginVersionId = Number(pluginVersionIdRaw);
 
-    if (!pluginIdRaw.length || !Number.isInteger(pluginId) || pluginId <= 0) {
-      setCreateErrors({ pluginId: "Enter a valid plugin identifier." });
+    if (
+      !pluginVersionIdRaw.length ||
+      !Number.isInteger(pluginVersionId) ||
+      pluginVersionId <= 0
+    ) {
+      setCreateErrors({ pluginVersionId: "Enter a valid plugin version identifier." });
       return;
     }
 
@@ -85,7 +89,7 @@ const PluginsCard = ({ configurationId, plugins }: PluginsCardProps) => {
     try {
       await createGamePlugin({
         gameConfigurationId: configurationId,
-        pluginId,
+        pluginVersionId,
         description: description.length ? description : undefined,
         configuration: configurationValue.length ? configurationValue : undefined,
       });
@@ -93,7 +97,7 @@ const PluginsCard = ({ configurationId, plugins }: PluginsCardProps) => {
       showToast({
         variant: "success",
         title: "Plugin added",
-        message: `Plugin ${pluginId} has been linked successfully.`,
+        message: `Plugin version ${pluginVersionId} has been linked successfully.`,
         hideButtonLabel: "Dismiss",
       });
 
@@ -129,7 +133,7 @@ const PluginsCard = ({ configurationId, plugins }: PluginsCardProps) => {
       showToast({
         variant: "success",
         title: "Plugin updated",
-        message: `Plugin ${editingPlugin.pluginId} has been updated successfully.`,
+        message: `Plugin version ${editingPlugin.pluginVersionId} has been updated successfully.`,
         hideButtonLabel: "Dismiss",
       });
 
@@ -175,7 +179,7 @@ const PluginsCard = ({ configurationId, plugins }: PluginsCardProps) => {
         showToast({
           variant: "success",
           title: "Plugin removed",
-          message: `Plugin ${plugin.pluginId} has been removed successfully.`,
+          message: `Plugin version ${plugin.pluginVersionId} has been removed successfully.`,
           hideButtonLabel: "Dismiss",
         });
 
@@ -200,9 +204,9 @@ const PluginsCard = ({ configurationId, plugins }: PluginsCardProps) => {
       getRowKey: (row) => row.id,
       fields: [
         {
-          key: "pluginId",
-          label: "Plugin ID",
-          dataKey: "pluginId",
+          key: "pluginVersionId",
+          label: "Plugin version ID",
+          dataKey: "pluginVersionId",
         },
         {
           key: "description",
@@ -257,18 +261,18 @@ const PluginsCard = ({ configurationId, plugins }: PluginsCardProps) => {
           <form key="create" className="space-y-4" onSubmit={handleCreateSubmit} noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="new-plugin-id">
-                  Plugin ID<span className="text-error-500">*</span>
+                <Label htmlFor="new-plugin-version-id">
+                  Plugin version ID<span className="text-error-500">*</span>
                 </Label>
                 <Input
-                  id="new-plugin-id"
-                  name="pluginId"
+                  id="new-plugin-version-id"
+                  name="pluginVersionId"
                   type="number"
-                  placeholder="Enter plugin ID"
+                  placeholder="Enter plugin version ID"
                   required
-                  onChange={handleCreatePluginIdChange}
-                  error={Boolean(createErrors.pluginId)}
-                  hint={createErrors.pluginId}
+                  onChange={handleCreatePluginVersionIdChange}
+                  error={Boolean(createErrors.pluginVersionId)}
+                  hint={createErrors.pluginVersionId}
                 />
               </div>
               <div>
@@ -314,11 +318,11 @@ const PluginsCard = ({ configurationId, plugins }: PluginsCardProps) => {
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="edit-plugin-id">Plugin ID</Label>
+                <Label htmlFor="edit-plugin-version-id">Plugin version ID</Label>
                 <Input
-                  id="edit-plugin-id"
-                  name="pluginId"
-                  defaultValue={editingPlugin.pluginId}
+                  id="edit-plugin-version-id"
+                  name="pluginVersionId"
+                  defaultValue={editingPlugin.pluginVersionId}
                   disabled
                 />
               </div>
