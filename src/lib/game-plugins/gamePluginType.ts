@@ -1,7 +1,7 @@
 export interface GamePlugin {
   id: number;
   gameConfigurationId: number;
-  pluginId: number;
+  pluginVersionId: number;
   description: string;
   configuration: string;
 }
