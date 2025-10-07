@@ -2,6 +2,7 @@ import { fetchData } from "@/lib/apiClient";
 import { GameSymbol, SymbolType } from "@/lib/symbols/symbolType";
 
 export interface UpdateSymbolPayload {
+  symbolId: number;
   name: string;
   description?: string;
   type: SymbolType;

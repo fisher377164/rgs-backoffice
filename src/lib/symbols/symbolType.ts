@@ -13,6 +13,7 @@ export type SymbolType = (typeof SYMBOL_TYPES)[number];
 
 export interface GameSymbol {
   id: number;
+  symbolId: number;
   gameConfigurationId: number;
   name: string;
   description: string | null;

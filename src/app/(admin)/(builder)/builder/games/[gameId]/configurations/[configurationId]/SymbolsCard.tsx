@@ -30,7 +30,7 @@ interface SymbolsCardProps {
   symbols: GameSymbol[];
 }
 
-type FormField = "name" | "type";
+type FormField = "symbolId" | "name" | "type";
 
 type FormErrors = Partial<Record<FormField, string>>;
 
@@ -108,11 +108,19 @@ const SymbolsCard = ({ configurationId, symbols }: SymbolsCardProps) => {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
+    const symbolIdValue = String(formData.get("symbolId") ?? "").trim();
+    const symbolId = Number(symbolIdValue);
     const name = String(formData.get("name") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim();
     const typeValue = String(formData.get("type") ?? "").trim();
 
     const validationErrors: FormErrors = {};
+
+    if (!symbolIdValue.length) {
+      validationErrors.symbolId = "This field is required.";
+    } else if (Number.isNaN(symbolId)) {
+      validationErrors.symbolId = "Please enter a valid number.";
+    }
 
     if (!name.length) {
       validationErrors.name = "This field is required.";
@@ -133,6 +141,7 @@ const SymbolsCard = ({ configurationId, symbols }: SymbolsCardProps) => {
     try {
       await createSymbol({
         gameConfigurationId: configurationId,
+        symbolId,
         name,
         description: description.length ? description : undefined,
         type: typeValue as SymbolType,
@@ -165,11 +174,19 @@ const SymbolsCard = ({ configurationId, symbols }: SymbolsCardProps) => {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
+    const symbolIdValue = String(formData.get("symbolId") ?? "").trim();
+    const symbolId = Number(symbolIdValue);
     const name = String(formData.get("name") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim();
     const typeValue = String(formData.get("type") ?? "").trim();
 
     const validationErrors: FormErrors = {};
+
+    if (!symbolIdValue.length) {
+      validationErrors.symbolId = "This field is required.";
+    } else if (Number.isNaN(symbolId)) {
+      validationErrors.symbolId = "Please enter a valid number.";
+    }
 
     if (!name.length) {
       validationErrors.name = "This field is required.";
@@ -189,6 +206,7 @@ const SymbolsCard = ({ configurationId, symbols }: SymbolsCardProps) => {
 
     try {
       await updateSymbol(editingSymbol.id, {
+        symbolId,
         name,
         description: description.length ? description : undefined,
         type: typeValue as SymbolType,
@@ -268,6 +286,11 @@ const SymbolsCard = ({ configurationId, symbols }: SymbolsCardProps) => {
           dataKey: "id",
         },
         {
+          key: "symbolId",
+          label: "Symbol ID",
+          dataKey: "symbolId",
+        },
+        {
           key: "name",
           label: "Name",
           dataKey: "name",
@@ -315,6 +338,21 @@ const SymbolsCard = ({ configurationId, symbols }: SymbolsCardProps) => {
         {isCreateOpen && (
           <form key="create" className="space-y-4" onSubmit={handleCreateSubmit} noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="new-symbol-symbol-id">
+                  Symbol ID<span className="text-error-500">*</span>
+                </Label>
+                <Input
+                  id="new-symbol-symbol-id"
+                  name="symbolId"
+                  type="number"
+                  placeholder="Enter symbol ID"
+                  required
+                  onChange={handleCreateInputChange("symbolId")}
+                  error={formatError(createErrors, "symbolId")}
+                  hint={getErrorHint(createErrors, "symbolId")}
+                />
+              </div>
               <div>
                 <Label htmlFor="new-symbol-name">
                   Name<span className="text-error-500">*</span>
@@ -394,6 +432,22 @@ const SymbolsCard = ({ configurationId, symbols }: SymbolsCardProps) => {
             noValidate
           >
             <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="edit-symbol-symbol-id">
+                  Symbol ID<span className="text-error-500">*</span>
+                </Label>
+                <Input
+                  id="edit-symbol-symbol-id"
+                  name="symbolId"
+                  type="number"
+                  defaultValue={editingSymbol.symbolId}
+                  placeholder="Enter symbol ID"
+                  required
+                  onChange={handleEditInputChange("symbolId")}
+                  error={formatError(editErrors, "symbolId")}
+                  hint={getErrorHint(editErrors, "symbolId")}
+                />
+              </div>
               <div>
                 <Label htmlFor="edit-symbol-name">
                   Name<span className="text-error-500">*</span>
