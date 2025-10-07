@@ -3,6 +3,7 @@ import { GameSymbol, SymbolType } from "@/lib/symbols/symbolType";
 
 export interface CreateSymbolPayload {
   gameConfigurationId: number;
+  symbolId: number;
   name: string;
   description?: string;
   type: SymbolType;
